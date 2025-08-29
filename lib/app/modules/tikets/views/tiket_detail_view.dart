@@ -9,14 +9,14 @@ import 'package:intl/intl.dart';
 
 class TiketDetailView extends GetView<TiketDetailController> {
   const TiketDetailView({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 1200;
-    
+
     return MainLayout(
       currentRoute: '/tikets/${controller.tiketId}',
       child: Scaffold(
@@ -25,11 +25,11 @@ class TiketDetailView extends GetView<TiketDetailController> {
           if (controller.isLoading.value && controller.tiket.value == null) {
             return const AppLoading();
           }
-          
+
           if (controller.errorMessage.value.isNotEmpty) {
             return _buildErrorState(context);
           }
-          
+
           final tiket = controller.tiket.value;
           if (tiket == null) {
             return Center(
@@ -42,10 +42,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                     color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    'Tiket tidak ditemukan',
-                    style: textTheme.headlineSmall,
-                  ),
+                  Text('Tiket tidak ditemukan', style: textTheme.headlineSmall),
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: () => Get.back(),
@@ -56,7 +53,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
               ),
             );
           }
-          
+
           return RefreshIndicator(
             onRefresh: () async {
               await controller.loadTiketDetail();
@@ -68,7 +65,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                 children: [
                   // Header
                   _buildHeader(context, tiket),
-                  
+
                   // Content
                   Container(
                     padding: EdgeInsets.all(isDesktop ? 32 : 24),
@@ -93,7 +90,8 @@ class TiketDetailView extends GetView<TiketDetailController> {
                                 child: Column(
                                   children: [
                                     _buildInfoCard(context, tiket),
-                                    if (controller.canUpdateStatus() || controller.canAssignTiket()) ...[
+                                    if (controller.canUpdateStatus() ||
+                                        controller.canAssignTiket()) ...[
                                       const SizedBox(height: 24),
                                       _buildActionCard(context, tiket),
                                     ],
@@ -107,7 +105,8 @@ class TiketDetailView extends GetView<TiketDetailController> {
                               _buildTiketDetailCard(context, tiket),
                               const SizedBox(height: 24),
                               _buildInfoCard(context, tiket),
-                              if (controller.canUpdateStatus() || controller.canAssignTiket()) ...[
+                              if (controller.canUpdateStatus() ||
+                                  controller.canAssignTiket()) ...[
                                 const SizedBox(height: 24),
                                 _buildActionCard(context, tiket),
                               ],
@@ -124,13 +123,13 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   Widget _buildHeader(BuildContext context, Tiket tiket) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 1200;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -161,7 +160,10 @@ class TiketDetailView extends GetView<TiketDetailController> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
@@ -205,11 +207,11 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   Widget _buildTiketDetailCard(BuildContext context, Tiket tiket) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -225,10 +227,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.description_outlined,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.description_outlined, color: colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Deskripsi',
@@ -247,9 +246,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
               ),
               child: Text(
                 tiket.deskripsi,
-                style: textTheme.bodyLarge?.copyWith(
-                  height: 1.6,
-                ),
+                style: textTheme.bodyLarge?.copyWith(height: 1.6),
               ),
             ),
           ],
@@ -257,11 +254,11 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   Widget _buildInfoCard(BuildContext context, Tiket tiket) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -277,10 +274,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.info_outline_rounded, color: colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Informasi Tiket',
@@ -336,9 +330,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.green.shade200,
-                  ),
+                  border: Border.all(color: Colors.green.shade200),
                 ),
                 child: Row(
                   children: [
@@ -360,7 +352,9 @@ class TiketDetailView extends GetView<TiketDetailController> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            DateFormat('dd MMM yyyy, HH:mm').format(tiket.tanggalSelesai!),
+                            DateFormat(
+                              'dd MMM yyyy, HH:mm',
+                            ).format(tiket.tanggalSelesai!),
                             style: textTheme.bodySmall?.copyWith(
                               color: Colors.green.shade600,
                             ),
@@ -377,13 +371,13 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   Widget _buildActionCard(BuildContext context, Tiket tiket) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final isUnassigned = tiket.idKaryawan == null && tiket.idUnit == null;
     final isNew = tiket.idStatus == TiketDetailController.STATUS_BARU;
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -399,10 +393,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.settings_outlined,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.settings_outlined, color: colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Aksi Cepat',
@@ -413,7 +404,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Show assignment alert for new unassigned tickets
             if (isNew && isUnassigned && controller.canAssignTiket()) ...[
               Container(
@@ -444,26 +435,26 @@ class TiketDetailView extends GetView<TiketDetailController> {
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // Assignment buttons with better UX
             if (controller.canAssignTiket()) ...[
               if (isUnassigned) ...[
                 // Primary assignment actions for unassigned tickets
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => _showAssignKaryawanDialog(context),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.person_add_outlined, size: 18),
-                        SizedBox(width: 8),
-                        Text('Tugaskan ke Karyawan'),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
+                // SizedBox(
+                //   width: double.infinity,
+                //   child: FilledButton(
+                //     onPressed: () => _showAssignKaryawanDialog(context),
+                //     child: const Row(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         Icon(Icons.person_add_outlined, size: 18),
+                //         SizedBox(width: 8),
+                //         Text('Tugaskan ke Karyawan'),
+                //       ],
+                //     ),
+                //   ),
+                // ),
+                // const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.tonal(
@@ -499,14 +490,15 @@ class TiketDetailView extends GetView<TiketDetailController> {
               const Divider(),
               const SizedBox(height: 16),
             ],
-            
+
             // Status change button - only show if ticket is assigned or user can change
             if (controller.canUpdateStatus()) ...[
               if (!isUnassigned || !controller.canAssignTiket()) ...[
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.tonal(
-                    onPressed: controller.getAvailableStatusTransitions().isEmpty
+                    onPressed:
+                        controller.getAvailableStatusTransitions().isEmpty
                         ? null
                         : () => _showStatusDialog(context),
                     child: Row(
@@ -530,11 +522,11 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   Widget _buildKomentarSection(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -550,10 +542,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.comment_outlined,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.comment_outlined, color: colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Komentar',
@@ -562,24 +551,29 @@ class TiketDetailView extends GetView<TiketDetailController> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Obx(() => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${controller.komentars.length}',
-                    style: textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
+                Obx(
+                  () => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${controller.komentars.length}',
+                      style: textTheme.labelMedium?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                )),
+                ),
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Add Comment Form
             Container(
               padding: const EdgeInsets.all(16),
@@ -627,33 +621,35 @@ class TiketDetailView extends GetView<TiketDetailController> {
                         child: const Text('Batal'),
                       ),
                       const SizedBox(width: 8),
-                      Obx(() => FilledButton.icon(
-                        onPressed: controller.isSendingKomentar.value
-                            ? null
-                            : controller.sendKomentar,
-                        icon: controller.isSendingKomentar.value
-                            ? SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colorScheme.onPrimary,
-                                ),
-                              )
-                            : const Icon(Icons.send_rounded, size: 18),
-                        label: Text(
-                          controller.isSendingKomentar.value
-                              ? 'Mengirim...'
-                              : 'Kirim',
+                      Obx(
+                        () => FilledButton.icon(
+                          onPressed: controller.isSendingKomentar.value
+                              ? null
+                              : controller.sendKomentar,
+                          icon: controller.isSendingKomentar.value
+                              ? SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.onPrimary,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded, size: 18),
+                          label: Text(
+                            controller.isSendingKomentar.value
+                                ? 'Mengirim...'
+                                : 'Kirim',
+                          ),
                         ),
-                      )),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Comments List
             Obx(() {
               if (controller.isLoadingKomentar.value) {
@@ -664,7 +660,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                   ),
                 );
               }
-              
+
               if (controller.komentars.isEmpty) {
                 return Container(
                   padding: const EdgeInsets.all(32),
@@ -678,7 +674,9 @@ class TiketDetailView extends GetView<TiketDetailController> {
                         Icon(
                           Icons.chat_bubble_outline,
                           size: 48,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -691,7 +689,9 @@ class TiketDetailView extends GetView<TiketDetailController> {
                         Text(
                           'Jadilah yang pertama memberikan komentar',
                           style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                         ),
                       ],
@@ -699,7 +699,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                   ),
                 );
               }
-              
+
               return Column(
                 children: controller.komentars.map((komentar) {
                   return _buildKomentarItem(context, komentar);
@@ -711,20 +711,18 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   Widget _buildKomentarItem(BuildContext context, Komentar komentar) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -754,7 +752,9 @@ class TiketDetailView extends GetView<TiketDetailController> {
                       ),
                     ),
                     Text(
-                      DateFormat('dd MMM yyyy, HH:mm').format(komentar.createdAt),
+                      DateFormat(
+                        'dd MMM yyyy, HH:mm',
+                      ).format(komentar.createdAt),
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -777,27 +777,26 @@ class TiketDetailView extends GetView<TiketDetailController> {
           const SizedBox(height: 12),
           Text(
             komentar.body,
-            style: textTheme.bodyMedium?.copyWith(
-              height: 1.5,
-            ),
+            style: textTheme.bodyMedium?.copyWith(height: 1.5),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
+
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: colorScheme.onSurfaceVariant,
-        ),
+        Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -822,16 +821,16 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ],
     );
   }
-  
+
   Widget _buildPriorityBadge(BuildContext context, String priority) {
     return PriorityBadge(priority: priority);
   }
-  
+
   Widget _buildStatusBadge(BuildContext context, String status) {
     Color bgColor;
     Color textColor;
     IconData icon;
-    
+
     if (status.toLowerCase().contains('open')) {
       bgColor = Colors.blue.shade50;
       textColor = Colors.blue.shade700;
@@ -853,7 +852,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
       textColor = Colors.grey.shade700;
       icon = Icons.help_outline;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -877,11 +876,11 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   Widget _buildErrorState(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     return Center(
       child: Container(
         padding: const EdgeInsets.all(32),
@@ -889,11 +888,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
             const SizedBox(height: 16),
             Text(
               'Terjadi Kesalahan',
@@ -920,10 +915,10 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   void _showEditDialog(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     Get.dialog(
       AlertDialog(
         title: const Text('Edit Tiket'),
@@ -959,38 +954,36 @@ class TiketDetailView extends GetView<TiketDetailController> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Obx(() => DropdownButtonFormField<String>(
-                  value: controller.selectedPriority.value,
-                  decoration: InputDecoration(
-                    labelText: 'Prioritas',
-                    filled: true,
-                    fillColor: colorScheme.surfaceContainerLowest,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Obx(
+                  () => DropdownButtonFormField<String>(
+                    value: controller.selectedPriority.value,
+                    decoration: InputDecoration(
+                      labelText: 'Prioritas',
+                      filled: true,
+                      fillColor: colorScheme.surfaceContainerLowest,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    items: const [
+                      DropdownMenuItem(value: 'rendah', child: Text('Rendah')),
+                      DropdownMenuItem(value: 'sedang', child: Text('Sedang')),
+                      DropdownMenuItem(value: 'tinggi', child: Text('Tinggi')),
+                      DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null)
+                        controller.selectedPriority.value = value;
+                    },
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'rendah', child: Text('Rendah')),
-                    DropdownMenuItem(value: 'sedang', child: Text('Sedang')),
-                    DropdownMenuItem(value: 'tinggi', child: Text('Tinggi')),
-                    DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) controller.selectedPriority.value = value;
-                  },
-                )),
+                ),
               ],
             ),
           ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           FilledButton(
             onPressed: () {
               Get.back();
@@ -1002,11 +995,11 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   void _showStatusDialog(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final availableStatuses = controller.getAvailableStatusTransitions();
-    
+
     if (availableStatuses.isEmpty) {
       Get.snackbar(
         'Info',
@@ -1016,7 +1009,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
       );
       return;
     }
-    
+
     Get.dialog(
       AlertDialog(
         title: const Text('Ubah Status Tiket'),
@@ -1051,7 +1044,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
               ...availableStatuses.map((statusId) {
                 final statusColor = controller.getStatusColor(statusId);
                 final statusLabel = controller.getStatusLabel(statusId);
-                
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
@@ -1068,7 +1061,9 @@ class TiketDetailView extends GetView<TiketDetailController> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                     onTap: () {
@@ -1081,19 +1076,14 @@ class TiketDetailView extends GetView<TiketDetailController> {
             ],
           ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
         ],
       ),
     );
   }
-  
+
   IconData _getStatusIcon(int statusId) {
     switch (statusId) {
       case TiketDetailController.STATUS_BARU:
@@ -1112,7 +1102,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
         return Icons.help_outline;
     }
   }
-  
+
   String _getStatusDescription(int statusId) {
     switch (statusId) {
       case TiketDetailController.STATUS_BARU:
@@ -1131,7 +1121,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
         return '';
     }
   }
-  
+
   void _showAssignUnitDialog(BuildContext context) {
     int? selectedUnitId = controller.tiket.value?.idUnit;
     final komentarController = TextEditingController();
@@ -1140,53 +1130,55 @@ class TiketDetailView extends GetView<TiketDetailController> {
         title: const Text('Tugaskan ke Unit'),
         content: StatefulBuilder(
           builder: (context, setState) {
-            return Obx(() => SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ...controller.unitOptions.map((unit) {
-                        return RadioListTile<int>(
-                          title: Text(unit.nama),
-                          subtitle: unit.description != null ? Text(unit.description!) : null,
-                          value: unit.id,
-                          groupValue: selectedUnitId,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedUnitId = value;
-                            });
-                          },
-                        );
-                      }),
-                      const SizedBox(height: 12),
-                      const Text('Komentar (opsional):'),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: komentarController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Tambahkan instruksi/komentar penugasan...',
-                        ),
+            return Obx(
+              () => SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...controller.unitOptions.map((unit) {
+                      return RadioListTile<int>(
+                        title: Text(unit.nama),
+                        subtitle: unit.description != null
+                            ? Text(unit.description!)
+                            : null,
+                        value: unit.id,
+                        groupValue: selectedUnitId,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedUnitId = value;
+                          });
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                    const Text('Komentar (opsional):'),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: komentarController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Tambahkan instruksi/komentar penugasan...',
                       ),
-                    ],
-                  ),
-                ));
+                    ),
+                  ],
+                ),
+              ),
+            );
           },
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           FilledButton(
             onPressed: () {
               if (selectedUnitId != null) {
                 final k = komentarController.text.trim();
-                controller.assignToUnit(selectedUnitId!, komentar: k.isEmpty ? null : k);
+                controller.assignToUnit(
+                  selectedUnitId!,
+                  komentar: k.isEmpty ? null : k,
+                );
               }
               Get.back();
             },
@@ -1196,7 +1188,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   void _showAssignKaryawanDialog(BuildContext context) {
     int? selectedKaryawanId = controller.tiket.value?.idKaryawan;
     final komentarController = TextEditingController();
@@ -1205,60 +1197,60 @@ class TiketDetailView extends GetView<TiketDetailController> {
         title: const Text('Tugaskan ke Karyawan'),
         content: StatefulBuilder(
           builder: (context, setState) {
-            return Obx(() => SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ...controller.karyawanOptions.map((karyawan) {
-                        return RadioListTile<int>(
-                          title: Text(karyawan.nama),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('NIK: ${karyawan.nik}'),
-                              Text('Unit: ${karyawan.unitLabel}'),
-                            ],
-                          ),
-                          value: karyawan.id,
-                          groupValue: selectedKaryawanId,
-                          onChanged: (value) {
-                            setState(() {
-                              selectedKaryawanId = value;
-                            });
-                          },
-                          isThreeLine: true,
-                        );
-                      }),
-                      const SizedBox(height: 12),
-                      const Text('Komentar (opsional):'),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: komentarController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Tambahkan instruksi/komentar penugasan...',
+            return Obx(
+              () => SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ...controller.karyawanOptions.map((karyawan) {
+                      return RadioListTile<int>(
+                        title: Text(karyawan.nama),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('NIK: ${karyawan.nik}'),
+                            Text('Unit: ${karyawan.unitLabel}'),
+                          ],
                         ),
+                        value: karyawan.id,
+                        groupValue: selectedKaryawanId,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedKaryawanId = value;
+                          });
+                        },
+                        isThreeLine: true,
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                    const Text('Komentar (opsional):'),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: komentarController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Tambahkan instruksi/komentar penugasan...',
                       ),
-                    ],
-                  ),
-                ));
+                    ),
+                  ],
+                ),
+              ),
+            );
           },
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           FilledButton(
             onPressed: () {
               if (selectedKaryawanId != null) {
                 final k = komentarController.text.trim();
-                controller.assignToKaryawan(selectedKaryawanId!, komentar: k.isEmpty ? null : k);
+                controller.assignToKaryawan(
+                  selectedKaryawanId!,
+                  komentar: k.isEmpty ? null : k,
+                );
               }
               Get.back();
             },
@@ -1268,7 +1260,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   void _promptUpdateStatus(BuildContext context, int statusId) {
     final komentarController = TextEditingController();
     Get.dialog(
@@ -1292,14 +1284,9 @@ class TiketDetailView extends GetView<TiketDetailController> {
             ),
           ],
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           FilledButton(
             onPressed: () {
               // komentar optional; controller handles without it
@@ -1312,7 +1299,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
       ),
     );
   }
-  
+
   void _confirmDeleteKomentar(BuildContext context, Komentar komentar) {
     Get.dialog(
       AlertDialog(
@@ -1324,22 +1311,15 @@ class TiketDetailView extends GetView<TiketDetailController> {
           ],
         ),
         content: const Text('Apakah Anda yakin ingin menghapus komentar ini?'),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Batal'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           FilledButton(
             onPressed: () {
               Get.back();
               controller.deleteKomentar(komentar.id);
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Hapus'),
           ),
         ],

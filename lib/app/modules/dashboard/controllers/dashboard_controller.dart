@@ -4,6 +4,7 @@ import 'package:frontend/app/core/controllers/base_controller.dart';
 import 'package:frontend/app/services/api_service.dart';
 import 'package:frontend/app/data/models/user_model.dart';
 import 'package:frontend/app/data/models/tiket_model.dart';
+import 'package:frontend/app/services/pdf_export_service.dart';
 
 class DashboardController extends BaseController {
   // Remove duplicate service declarations since they're in BaseController
@@ -78,6 +79,9 @@ class DashboardController extends BaseController {
   final RxInt karyawanCompletedToday = 0.obs;
   final RxInt userOpenTickets = 0.obs;
   final RxInt userResolvedTickets = 0.obs;
+
+  // PDF Export functionality
+  final RxBool isGeneratingPdf = false.obs;
 
 
   /// Load basic dashboard data for all roles (fallback only)
@@ -539,5 +543,80 @@ class DashboardController extends BaseController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Export dashboard to PDF (for Direksi role)
+  Future<void> exportDashboardToPdf() async {
+    if (isGeneratingPdf.value) return;
+    
+    try {
+      isGeneratingPdf.value = true;
+      
+      // Validate that user is Direksi
+      if (!isDireksi) {
+        showErrorSnackbar('PDF export hanya tersedia untuk role Direksi');
+        return;
+      }
+      
+      // Extract current dashboard data from observables
+      final exportData = _extractCurrentDashboardData();
+      
+      // Validate that we have sufficient data
+      if (!_validateExportData(exportData)) {
+        showErrorSnackbar('Data dashboard tidak mencukupi untuk export. Silakan refresh dashboard.');
+        return;
+      }
+      
+      // Generate PDF using current dashboard data
+      final pdfBytes = await PdfExportService.generateDireksiDashboardReport(
+        dashboardData: exportData,
+        userName: currentUser?.nama ?? 'Unknown User',
+      );
+      
+      // Generate filename with timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filename = 'dashboard_report_direksi_$timestamp.pdf';
+      
+      // Download PDF file
+      await PdfExportService.downloadPdf(pdfBytes, filename);
+      
+      showSuccessSnackbar('Laporan dashboard berhasil di-export sebagai PDF');
+    } catch (e) {
+      handleError(e, context: 'exportDashboardToPdf');
+      showErrorSnackbar('Gagal membuat PDF report. Silakan coba lagi.');
+    } finally {
+      isGeneratingPdf.value = false;
+    }
+  }
+  
+  /// Extract current dashboard data from observables
+  Map<String, dynamic> _extractCurrentDashboardData() {
+    return {
+      'executive_summary': Map<String, dynamic>.from(direksiExecutiveSummary),
+      'performance_metrics': Map<String, dynamic>.from(direksiPerformanceMetrics),
+      'priority_distribution': direksiPriorityDistribution.toList(),
+      'unit_performance': direksiUnitPerformance.toList(),
+      'critical_metrics': Map<String, dynamic>.from(direksiCriticalMetrics),
+      'recent_tickets': recentTikets.take(10).toList(),
+      'export_metadata': {
+        'generated_at': DateTime.now().toIso8601String(),
+        'user_role': 'Direksi',
+        'user_name': currentUser?.nama ?? 'Unknown',
+        'data_source': 'Current Dashboard Session'
+      }
+    };
+  }
+  
+  /// Validate export data availability
+  bool _validateExportData(Map<String, dynamic> data) {
+    // Check if essential data is available
+    final summary = data['executive_summary'] as Map<String, dynamic>?;
+    final hasBasicData = summary != null && summary.isNotEmpty;
+    
+    // Check if we have at least some ticket data
+    final totalTickets = summary?['total_tikets'] ?? 0;
+    final hasTicketData = totalTickets > 0;
+    
+    return hasBasicData || hasTicketData;
   }
 }

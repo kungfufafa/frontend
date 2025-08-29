@@ -49,6 +49,49 @@ class DashboardView extends GetView<DashboardController> {
                   ),
                   tooltip: 'Refresh Dashboard',
                 ),
+                // PDF Export button for Direksi role only
+                Obx(() {
+                  if (controller.isDireksi) {
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: ElevatedButton.icon(
+                        onPressed: controller.isGeneratingPdf.value 
+                            ? null 
+                            : controller.exportDashboardToPdf,
+                        icon: controller.isGeneratingPdf.value
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colorScheme.onPrimary,
+                                ),
+                              )
+                            : Icon(
+                                Icons.file_download,
+                                size: 18,
+                                color: colorScheme.onPrimary,
+                              ),
+                        label: Text(
+                          controller.isGeneratingPdf.value ? 'Generating...' : 'Download PDF',
+                          style: TextStyle(
+                            color: colorScheme.onPrimary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          elevation: 2,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
                 ],
               ),
             ),
