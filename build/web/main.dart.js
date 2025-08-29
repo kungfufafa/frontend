@@ -28479,7 +28479,7 @@ a5C:function a5C(){},
 aXx(a){var s,r,q,p,o,n
 try{s=a.e
 o=a.b.l(0)
-r=A.Ak(o,"http://backend.test/api/v1","")
+r=A.Ak(o,"https://skripsipandu.rizqis.com/api/v1","")
 A.bH().$1("\ud83d\ude80 "+A.n(s)+" "+A.n(r))
 if(!J.Mq(r,"login"))try{a.gBT(a)
 o=a.gBT(a).l(0)
@@ -28491,7 +28491,7 @@ A.bH().$1("\u274c Log error: "+A.n(p))}},
 aXy(a,b){var s,r,q,p,o,n,m
 try{s=a.e
 n=a.b.l(0)
-r=A.Ak(n,"http://backend.test/api/v1","")
+r=A.Ak(n,"https://skripsipandu.rizqis.com/api/v1","")
 q=b.c
 p="\u2705"
 if(q!=null)if(q>=400&&q<500)p="\u26a0\ufe0f"
@@ -102194,7 +102194,7 @@ $0(){return B.a18},
 $S:625}
 A.AL.prototype={
 hU(){var s=this
-s.gip().b="http://backend.test/api/v1"
+s.gip().b="https://skripsipandu.rizqis.com/api/v1"
 s.gip().c="application/json"
 s.gip().z=B.Jw
 s.gip().x=new A.a5j()
