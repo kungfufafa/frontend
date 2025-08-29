@@ -4,7 +4,7 @@ import 'package:frontend/app/widgets/layouts/main_layout.dart';
 import '../controllers/dashboard_controller.dart';
 
 class DashboardView extends GetView<DashboardController> {
-  const DashboardView({Key? key}) : super(key: key);
+  const DashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +42,13 @@ class DashboardView extends GetView<DashboardController> {
                     )),
                   ),
                   IconButton(
-                    onPressed: controller.refreshDashboard,
-                    icon: Icon(
-                      Icons.refresh,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    tooltip: 'Refresh Dashboard',
+                  onPressed: controller.refreshDashboard,
+                  icon: Icon(
+                    Icons.refresh,
+                    color: colorScheme.onSurfaceVariant,
                   ),
+                  tooltip: 'Refresh Dashboard',
+                ),
                 ],
               ),
             ),
@@ -220,7 +220,7 @@ class DashboardView extends GetView<DashboardController> {
                 ),
               ),
               const Spacer(),
-              Icon(
+              const Icon(
                 Icons.trending_up,
                 color: Colors.green,
                 size: 20,
@@ -252,7 +252,7 @@ class DashboardView extends GetView<DashboardController> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    Widget _card(String title, Widget child) {
+    Widget card(String title, Widget child) {
       return Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
@@ -305,7 +305,7 @@ class DashboardView extends GetView<DashboardController> {
           ),
         ),
         // Admin Reports filter with Date Picker
-        _card(
+        card(
           'Laporan Admin',
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,7 +512,7 @@ class DashboardView extends GetView<DashboardController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _card(
+                    child: card(
                       'Distribusi Status',
                       Obx(() => _buildKeyCountList(
                             context,
@@ -522,7 +522,7 @@ class DashboardView extends GetView<DashboardController> {
                   ),
                   const SizedBox(width: 20),
                   Expanded(
-                    child: _card(
+                    child: card(
                       'Distribusi Prioritas',
                       Obx(() => _buildKeyCountList(
                             context,
@@ -535,14 +535,14 @@ class DashboardView extends GetView<DashboardController> {
             } else {
               return Column(
                 children: [
-                  _card(
+                  card(
                     'Distribusi Status',
                     Obx(() => _buildKeyCountList(
                           context,
                           controller.adminByStatus.map((e) => {'label': e['nama_status'] ?? '-', 'count': e['count'] ?? 0}).toList(),
                         )),
                   ),
-                  _card(
+                  card(
                     'Distribusi Prioritas',
                     Obx(() => _buildKeyCountList(
                           context,
@@ -563,7 +563,7 @@ class DashboardView extends GetView<DashboardController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _card(
+                    child: card(
                       'User by Role',
                       Obx(() => _buildKeyCountList(
                             context,
@@ -573,7 +573,7 @@ class DashboardView extends GetView<DashboardController> {
                   ),
                   const SizedBox(width: 20),
                   Expanded(
-                    child: _card(
+                    child: card(
                       'Registrasi Terbaru',
                       Obx(() => _buildSimpleList(
                             context,
@@ -588,14 +588,14 @@ class DashboardView extends GetView<DashboardController> {
             } else {
               return Column(
                 children: [
-                  _card(
+                  card(
                     'User by Role',
                     Obx(() => _buildKeyCountList(
                           context,
                           controller.adminByRole.map((e) => {'label': e['role_name'] ?? '-', 'count': e['count'] ?? 0}).toList(),
                         )),
                   ),
-                  _card(
+                  card(
                     'Registrasi Terbaru',
                     Obx(() => _buildSimpleList(
                           context,
@@ -609,7 +609,7 @@ class DashboardView extends GetView<DashboardController> {
             }
           },
         ),
-        _card(
+        card(
           'Performa Unit',
           Obx(() => _buildSimpleList(
                 context,
@@ -703,13 +703,13 @@ class DashboardView extends GetView<DashboardController> {
         _buildSimpleList(
           context,
           title: 'Tiket Saya (terbaru)',
-          items: controller.karyawanMyTikets.map((t) => '${t.judul ?? 'Tanpa Judul'} • ${t.statusString}').toList(),
+          items: controller.karyawanMyTikets.map((t) => '${t.judul} • ${t.statusString}').toList(),
         ),
         const SizedBox(height: 12),
         _buildSimpleList(
           context,
           title: 'Tiket Unit (belum ditugaskan)',
-          items: controller.karyawanUnitTikets.map((t) => '${t.judul ?? 'Tanpa Judul'} • ${t.statusString}').toList(),
+          items: controller.karyawanUnitTikets.map((t) => '${t.judul} • ${t.statusString}').toList(),
         ),
       ],
     );
@@ -743,7 +743,7 @@ class DashboardView extends GetView<DashboardController> {
       _buildSimpleList(
         context,
         title: 'Tiket Terakhir',
-        items: controller.userRecentTikets.map((t) => '${t.judul ?? 'Tanpa Judul'} • ${t.statusString}').toList(),
+        items: controller.userRecentTikets.map((t) => '${t.judul} • ${t.statusString}').toList(),
       ),
     ]);
   }
@@ -846,7 +846,7 @@ class DashboardView extends GetView<DashboardController> {
               ),
               TextButton(
                 onPressed: () => Get.toNamed('/tikets'),
-                child: Text('Lihat Semua'),
+                child: const Text('Lihat Semua'),
               ),
             ],
           ),
@@ -898,7 +898,7 @@ class DashboardView extends GetView<DashboardController> {
                     ),
                   ),
                   title: Text(
-                    tiket.judul ?? 'Tanpa Judul',
+                    tiket.judul,
                     style: textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),

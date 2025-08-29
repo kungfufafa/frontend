@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:frontend/app/services/api_service.dart';
+import 'package:frontend/app/core/controllers/base_controller.dart';
+import 'package:frontend/app/core/utils/app_snackbar.dart';
+import 'package:frontend/app/core/utils/standard_form_validation.dart';
 import 'package:frontend/app/data/models/user_model.dart';
 import 'package:frontend/app/routes/app_pages.dart';
 
-class RegisterController extends GetxController {
-  final ApiService apiService = Get.find<ApiService>();
-
+class RegisterController extends BaseController {
   final TextEditingController namaController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
-  var isLoading = false.obs;
   var obscurePassword = true.obs;
   var obscureConfirmPassword = true.obs;
 
@@ -25,6 +24,16 @@ class RegisterController extends GetxController {
     super.onClose();
   }
 
+  @override
+  bool validateForm() {
+    return _validateForm();
+  }
+
+  @override
+  void navigateToListPage() {
+    Get.offNamed(Routes.LOGIN); // Navigate to login after successful registration
+  }
+
   void togglePasswordVisibility() {
     obscurePassword.value = !obscurePassword.value;
   }
@@ -34,57 +43,27 @@ class RegisterController extends GetxController {
   }
 
   void register() async {
-    if (!_validateForm()) return;
+    await performCreateOperation(
+      createFunction: () => _registerUserData(),
+      successMessage: 'Registrasi berhasil! Silakan login dengan akun Anda.',
+      loadingMessage: 'Mendaftarkan akun...',
+    );
+  }
 
-    try {
-      isLoading(true);
+  Future<void> _registerUserData() async {
+    final registerRequest = RegisterRequest(
+      nama: namaController.text.trim(),
+      email: emailController.text.trim(),
+      password: passwordController.text,
+      passwordConfirmation: confirmPasswordController.text,
+    );
 
-      final registerRequest = RegisterRequest(
-        nama: namaController.text.trim(),
-        email: emailController.text.trim(),
-        password: passwordController.text,
-        passwordConfirmation: confirmPasswordController.text,
-      );
+    var response = await apiService.register(registerRequest);
 
-      var response = await apiService.register(registerRequest);
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        // Registration successful
-        Get.snackbar(
-          'Success',
-          'Registrasi berhasil! Silakan login dengan akun Anda.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[800],
-          duration: const Duration(seconds: 3),
-        );
-
-        // Clear form
-        _clearForm();
-
-        // Navigate to login
-        Get.offNamed(Routes.LOGIN);
-      } else {
-        // Handle validation errors or other errors
-        final errorMessage = _extractErrorMessage(response);
-        Get.snackbar(
-          'Error',
-          'Registrasi Gagal: $errorMessage',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[800],
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Terjadi kesalahan: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-      );
-    } finally {
-      isLoading(false);
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      _clearForm();
+    } else {
+      throw Exception(_extractErrorMessage(response));
     }
   }
 
@@ -112,79 +91,30 @@ class RegisterController extends GetxController {
   }
 
   bool _validateForm() {
-    // Validate nama
-    if (namaController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Nama tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final namaError = StandardFormValidation.validateMinLength(namaController.text, 2, 'Nama');
+    if (namaError != null) {
+      AppSnackbar.error(namaError);
       return false;
     }
 
-    if (namaController.text.trim().length < 2) {
-      Get.snackbar(
-        'Error',
-        'Nama minimal 2 karakter',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final emailError = StandardFormValidation.validateEmail(emailController.text);
+    if (emailError != null) {
+      AppSnackbar.error(emailError);
       return false;
     }
 
-    // Validate email
-    if (emailController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Email tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final passwordError = StandardFormValidation.validateMinLength(passwordController.text, 8, 'Password');
+    if (passwordError != null) {
+      AppSnackbar.error(passwordError);
       return false;
     }
 
-    if (!GetUtils.isEmail(emailController.text.trim())) {
-      Get.snackbar(
-        'Error',
-        'Format email tidak valid',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    // Validate password
-    if (passwordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Password tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    if (passwordController.text.length < 8) {
-      Get.snackbar(
-        'Error',
-        'Password minimal 8 karakter',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    // Validate password confirmation
-    if (confirmPasswordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Konfirmasi password tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    if (passwordController.text != confirmPasswordController.text) {
-      Get.snackbar(
-        'Error',
-        'Password dan konfirmasi password tidak sama',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final confirmPasswordError = StandardFormValidation.validatePasswordConfirmation(
+      confirmPasswordController.text,
+      passwordController.text,
+    );
+    if (confirmPasswordError != null) {
+      AppSnackbar.error(confirmPasswordError);
       return false;
     }
 

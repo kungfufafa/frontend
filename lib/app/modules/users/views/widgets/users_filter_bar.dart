@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../controllers/users_controller.dart';
 
 class UsersFilterBar extends StatelessWidget {
-  const UsersFilterBar({Key? key}) : super(key: key);
+  const UsersFilterBar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class UsersFilterBar extends StatelessWidget {
             spacing: 8,
             children: [
               FilterChip(
-                label: Text('Semua'),
+                label: const Text('Semua'),
                 selected: controller.selectedRole.value == 0,
                 onSelected: (_) => controller.filterByRole(0),
                 backgroundColor: colorScheme.surfaceContainerHigh,
@@ -75,7 +75,7 @@ class UsersFilterBar extends StatelessWidget {
                     : colorScheme.outline.withValues(alpha: 0.2),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              )).toList(),
+              )),
             ],
           )),
           
@@ -100,19 +100,19 @@ class UsersFilterBar extends StatelessWidget {
               controller.filterByActiveStatus(newSelection.first);
             },
             style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
                   return colorScheme.primaryContainer;
                 }
                 return colorScheme.surfaceContainerHigh;
               }),
-              foregroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
+              foregroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
                   return colorScheme.onPrimaryContainer;
                 }
                 return colorScheme.onSurfaceVariant;
               }),
-              side: MaterialStateProperty.all(
+              side: WidgetStateProperty.all(
                 BorderSide(
                   color: colorScheme.outline.withValues(alpha: 0.2),
                 ),
@@ -143,7 +143,7 @@ class UsersFilterBar extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${controller.users.value.length} / ${controller.totalUsers.value}',
+                      '${controller.users.length} / ${controller.totalUsers.value}',
                       style: textTheme.labelMedium?.copyWith(
                         color: colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.w600,

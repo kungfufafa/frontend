@@ -1,5 +1,5 @@
+// ignore_for_file: constant_identifier_names
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:frontend/app/services/api_service.dart';
 import 'package:frontend/app/services/auth_service.dart';
@@ -149,19 +149,15 @@ class TiketDetailController extends GetxController {
         if (statusResponse.statusCode == 200) {
           final data = statusResponse.body['data'] ?? statusResponse.body;
           final List<dynamic> items = data is List ? data : (data['data'] ?? []);
-          if (items is List) {
-            statusOptions.value = items.map((json) => Status.fromJson(json)).toList();
-          }
-        } else {
+          statusOptions.value = items.map((json) => Status.fromJson(json)).toList();
+                } else {
           // Fallback ke /statuses
           final statusesResponse = await _apiService.getStatuses();
           if (statusesResponse.statusCode == 200) {
             final data = statusesResponse.body['data'] ?? statusesResponse.body;
             final List<dynamic> items = data is List ? data : (data['data'] ?? []);
-            if (items is List) {
-              statusOptions.value = items.map((json) => Status.fromJson(json)).toList();
-            }
-          }
+            statusOptions.value = items.map((json) => Status.fromJson(json)).toList();
+                    }
         }
       } catch (_) {
         // Fallback jika call /statuses/options menyebabkan exception
@@ -169,10 +165,8 @@ class TiketDetailController extends GetxController {
         if (statusesResponse.statusCode == 200) {
           final data = statusesResponse.body['data'] ?? statusesResponse.body;
           final List<dynamic> items = data is List ? data : (data['data'] ?? []);
-          if (items is List) {
-            statusOptions.value = items.map((json) => Status.fromJson(json)).toList();
-          }
-        }
+          statusOptions.value = items.map((json) => Status.fromJson(json)).toList();
+                }
       }
       
       // Load unit options (for admin/manager)
@@ -508,10 +502,8 @@ class TiketDetailController extends GetxController {
     // Manager can edit tikets
     if (currentUser!.isManager()) return true;
     
-    // User can edit their own tiket if still open
-    if (currentUser!.isUser() && tiket.value!.idUser == currentUser!.id && tiket.value!.isOpen) {
-      return true;
-    }
+    // User/Klien cannot edit tikets at all
+    if (currentUser!.isUser()) return false;
     
     // Karyawan cannot edit tickets - they can only update status
     if (currentUser!.isKaryawan()) return false;

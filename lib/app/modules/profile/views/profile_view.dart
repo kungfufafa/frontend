@@ -4,7 +4,7 @@ import '../controllers/profile_controller.dart';
 import '../../../widgets/layouts/main_layout.dart';
 
 class ProfileView extends GetView<ProfileController> {
-  const ProfileView({Key? key}) : super(key: key);
+  const ProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +332,7 @@ class ProfileView extends GetView<ProfileController> {
                         controller: controller.namaController,
                         decoration: InputDecoration(
                           labelText: 'Nama',
-                          prefixIcon: Icon(Icons.person_outline),
+                          prefixIcon: const Icon(Icons.person_outline),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -356,7 +356,7 @@ class ProfileView extends GetView<ProfileController> {
                         controller: controller.emailController,
                         decoration: InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined),
+                          prefixIcon: const Icon(Icons.email_outlined),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -450,7 +450,7 @@ class ProfileView extends GetView<ProfileController> {
                         obscureText: controller.obscureCurrentPassword.value,
                         decoration: InputDecoration(
                           labelText: 'Password Saat Ini',
-                          prefixIcon: Icon(Icons.lock_outline),
+                          prefixIcon: const Icon(Icons.lock_outline),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

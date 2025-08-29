@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:frontend/app/core/controllers/base_controller.dart';
+import 'package:frontend/app/core/utils/standard_form_validation.dart';
 import 'package:frontend/app/services/api_service.dart';
 import 'package:frontend/app/data/models/user_model.dart';
 import 'package:frontend/app/services/auth_service.dart';
 import 'package:frontend/app/routes/app_pages.dart';
 
-class LoginController extends GetxController {
-  final AuthService authService = Get.find<AuthService>();
+class LoginController extends BaseController {
+  // Remove duplicate AuthService declaration since it's in BaseController
+  // final AuthService authService = Get.find<AuthService>();
   static final _storage = GetStorage();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  var isLoading = false.obs;
+  // var isLoading = false.obs; // Use isSubmitting from BaseController instead
   var obscurePassword = true.obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    // AuthService akan handle auto-login di middleware
-  }
 
   @override
   void onClose() {
@@ -36,10 +34,10 @@ class LoginController extends GetxController {
 
 
   void login() async {
-    if (!_validateForm()) return;
+    if (!validateForm()) return;
 
     try {
-      isLoading(true);
+      isSubmitting(true);
       
       // Log attempt untuk debugging
       ApiService.logDebug('Login attempt started', context: 'LoginController');
@@ -60,85 +58,40 @@ class LoginController extends GetxController {
         // Navigate to dashboard
         Get.offAllNamed(Routes.DASHBOARD);
         
-        Get.snackbar(
-          'Success',
-          result.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[800],
-        );
+        showSuccessSnackbar(result.message);
       } else {
         // Log error untuk debugging
         ApiService.logError('Login failed: ${result.message}', context: 'LoginController');
         
-        Get.snackbar(
-          'Error Login',
-          result.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[800],
-          duration: const Duration(seconds: 4),
-        );
+        showErrorSnackbar(result.message);
       }
-    } catch (e, stackTrace) {
-      // Log exception untuk debugging
-      ApiService.logError('Login exception: $e', context: 'LoginController', stackTrace: stackTrace);
-      
-      Get.snackbar(
-        'Error',
-        'Terjadi kesalahan: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-      );
+    } catch (e) {
+      // Use standardized error handling from BaseController
+      handleError(e, context: 'login');
     } finally {
-      isLoading(false);
+      isSubmitting(false);
       ApiService.logDebug('Login attempt finished', context: 'LoginController');
     }
   }
 
-  // Form validation - sederhana dan beginner friendly
-  bool _validateForm() {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-
-    // Cek email kosong
-    if (email.isEmpty) {
-      _showErrorMessage('Email tidak boleh kosong');
+  // Override BaseController form validation
+  @override
+  bool validateForm() {
+    // Validate email using StandardFormValidation
+    final emailError = StandardFormValidation.validateEmail(emailController.text);
+    if (emailError != null) {
+      showErrorSnackbar(emailError);
       return false;
     }
 
-    // Cek password kosong
-    if (password.isEmpty) {
-      _showErrorMessage('Password tidak boleh kosong');
-      return false;
-    }
-
-    // Validasi email sederhana
-    if (!email.contains('@') || !email.contains('.')) {
-      _showErrorMessage('Format email tidak valid');
-      return false;
-    }
-
-    // Password minimal 6 karakter (untuk MVP)
-    if (password.length < 6) {
-      _showErrorMessage('Password minimal 6 karakter');
+    // Validate password using StandardFormValidation
+    final passwordError = StandardFormValidation.validatePassword(passwordController.text);
+    if (passwordError != null) {
+      showErrorSnackbar(passwordError);
       return false;
     }
 
     return true;
-  }
-
-  // Helper method untuk menampilkan error message
-  void _showErrorMessage(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red[100],
-      colorText: Colors.red[800],
-      duration: const Duration(seconds: 3),
-    );
   }
 
 

@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:frontend/app/services/api_service.dart';
+import 'package:frontend/app/core/controllers/base_controller.dart';
+import 'package:frontend/app/core/utils/app_snackbar.dart';
+import 'package:frontend/app/core/utils/standard_form_validation.dart';
+import 'package:frontend/app/core/utils/standard_error_handler.dart';
 import 'package:frontend/app/data/models/user_model.dart';
-import 'package:frontend/app/services/auth_service.dart';
 
-class ProfileController extends GetxController {
-  final ApiService apiService = Get.find<ApiService>();
-  final AuthService authService = Get.find<AuthService>();
-
+class ProfileController extends BaseController {
   // User data
   var currentUser = Rxn<User>();
   var isLoadingProfile = false.obs;
+  var isUpdatingProfile = false.obs;  // Added missing property
 
   // Update profile form
   final TextEditingController namaController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  var isUpdatingProfile = false.obs;
 
   // Change password form
   final TextEditingController currentPasswordController = TextEditingController();
@@ -32,16 +31,14 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Ambil data user dari AuthService terlebih dahulu
     final authUser = authService.user;
     if (authUser != null) {
       currentUser.value = authUser;
       namaController.text = authUser.nama;
       emailController.text = authUser.email;
-      ApiService.logDebug('Data user diambil dari AuthService - Nama: ${authUser.nama}, Email: ${authUser.email}', context: 'ProfileController');
+      debugPrint('Data user diambil dari AuthService - Nama: ${authUser.nama}, Email: ${authUser.email}');
     }
     
-    // Kemudian load dari API untuk data terbaru
     loadUserProfile();
   }
 
@@ -53,6 +50,16 @@ class ProfileController extends GetxController {
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
     super.onClose();
+  }
+
+  @override
+  bool validateForm() {
+    return _validateProfileForm();
+  }
+
+  @override
+  Future<void> refreshData() async {
+    await loadUserProfile();
   }
 
   void changeTab(int index) {
@@ -71,154 +78,91 @@ class ProfileController extends GetxController {
     obscureConfirmNewPassword.value = !obscureConfirmNewPassword.value;
   }
 
-  void loadUserProfile() async {
-    // Check if user is still logged in
+  Future<void> loadUserProfile() async {
     if (authService.user == null || !authService.isLoggedIn) {
-      ApiService.logDebug('User not logged in, skipping profile load', context: 'ProfileController');
+      debugPrint('User not logged in, skipping profile load');
       return;
     }
     
     try {
-      isLoadingProfile(true);
-      ApiService.logDebug('Memuat profil user', context: 'ProfileController');
+      isLoadingProfile.value = true;
+      debugPrint('Loading user profile...');
       
       var response = await apiService.getProfile();
 
       if (response.statusCode == 200) {
-        ApiService.logDebug('Berhasil memuat profil user', context: 'ProfileController');
+        debugPrint('Profile loaded successfully');
         currentUser.value = User.fromJson(response.body['data'] ?? response.body);
         
-        // Populate form fields with current user data
         namaController.text = currentUser.value?.nama ?? '';
         emailController.text = currentUser.value?.email ?? '';
       } else if (response.statusCode == 401) {
-        // User is not authenticated, don't show error
-        ApiService.logDebug('User not authenticated', context: 'ProfileController');
+        debugPrint('User not authenticated');
       } else {
-        ApiService.logError('Gagal memuat profil: ${response.statusCode}', context: 'ProfileController');
-        Get.snackbar(
-          'Error',
-          'Gagal memuat profil user: ${response.body?['message'] ?? 'Unknown error'}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[800],
-        );
+        throw Exception(response.body?['message'] ?? 'Gagal memuat profil');
       }
     } catch (e) {
-      ApiService.logError('Exception saat memuat profil: $e', context: 'ProfileController');
-      // Only show error if user is still logged in
       if (authService.isLoggedIn) {
-        Get.snackbar(
-          'Error',
-          'Terjadi kesalahan: $e',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[800],
-        );
+        StandardErrorHandler.handleLoadError('profil user', e, context: 'Load Profile');
       }
     } finally {
-      isLoadingProfile(false);
+      isLoadingProfile.value = false;
     }
   }
 
   void updateProfile() async {
-    if (!_validateProfileForm()) return;
-  
-    try {
-      isUpdatingProfile(true);
-      
-      // Log untuk debugging
-      ApiService.logDebug('Memulai update profile', context: 'ProfileController');
-  
-      // Ambil data user saat ini untuk perbandingan
-      final currentUserData = currentUser.value;
-      if (currentUserData == null) {
-        Get.snackbar('Error', 'Data user tidak ditemukan');
-        return;
-      }
-  
-      // Buat request dengan semua field yang diperlukan
-      final updateRequest = UpdateProfileRequest(
-        nama: namaController.text.trim(),
-        email: emailController.text.trim(),
-      );
+    if (!validateForm()) return;
 
-      // Validasi apakah ada perubahan
-      if (namaController.text.trim() == currentUserData.nama && 
-          emailController.text.trim() == currentUserData.email) {
-        Get.snackbar(
-          'Info',
-          'Tidak ada perubahan data',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange[100],
-          colorText: Colors.orange[800],
-        );
-        return;
-      }
-  
-      ApiService.logDebug('Mengirim request update dengan semua field - Nama: ${updateRequest.nama}, Email: ${updateRequest.email}', context: 'ProfileController');
-  
-      var response = await apiService.updateProfile(updateRequest);
-  
-      if (response.statusCode == 200) {
-        ApiService.logDebug('Update profile berhasil', context: 'ProfileController');
-        
-        // Debug: Log response data
-        ApiService.logDebug('Response data: ${response.body}', context: 'ProfileController');
-        
-        // Update user data di AuthService juga
-        final updatedUserData = response.body['data'] ?? response.body;
-        ApiService.logDebug('Raw updated user data: $updatedUserData', context: 'ProfileController');
-        
-        final updatedUser = User.fromJson(updatedUserData);
-        
-        // Debug: Log updated user data
-        ApiService.logDebug('Parsed updated user - Nama: ${updatedUser.nama}, Email: ${updatedUser.email}', context: 'ProfileController');
-        ApiService.logDebug('Current user before update - Nama: ${currentUser.value?.nama}, Email: ${currentUser.value?.email}', context: 'ProfileController');
-        
-        // Update currentUser untuk reactive UI
-        currentUser.value = updatedUser;
-        
-        // Update form controllers dengan data terbaru
-        namaController.text = updatedUser.nama;
-        emailController.text = updatedUser.email;
-        
-        // Update user data di AuthService agar sinkron
-        authService.updateUserData(updatedUser);
-        
-        // Debug: Log current user after update
-        ApiService.logDebug('Current user after update - Nama: ${currentUser.value?.nama}, Email: ${currentUser.value?.email}', context: 'ProfileController');
-        ApiService.logDebug('Form controllers updated - Nama: ${namaController.text}, Email: ${emailController.text}', context: 'ProfileController');
-        
-        Get.snackbar(
-          'Success',
-          'Profil berhasil diupdate',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[800],
-        );
-      } else {
-        ApiService.logError('Update profile gagal: ${response.statusCode}', context: 'ProfileController');
-        final errorMessage = _extractErrorMessage(response);
-        Get.snackbar(
-          'Error',
-          'Gagal update profil: $errorMessage',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[800],
-        );
-      }
+    try {
+      isUpdatingProfile.value = true;
+      
+      await _updateProfileData();
+      
+      showSuccessSnackbar('Profil berhasil diperbarui');
     } catch (e) {
-      ApiService.logError('Exception saat update profile: $e', context: 'ProfileController');
-      Get.snackbar(
-        'Error',
-        'Terjadi kesalahan: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-      );
+      handleError(e, context: 'updateProfile');
     } finally {
-      isUpdatingProfile(false);
+      isUpdatingProfile.value = false;
+    }
+  }
+
+  Future<void> _updateProfileData() async {
+    final currentUserData = currentUser.value;
+    if (currentUserData == null) {
+      throw Exception('Data user tidak ditemukan');
+    }
+
+    // Check if there are any changes
+    if (namaController.text.trim() == currentUserData.nama && 
+        emailController.text.trim() == currentUserData.email) {
+      AppSnackbar.info('Tidak ada perubahan data');
+      return;
+    }
+
+    final updateRequest = UpdateProfileRequest(
+      nama: namaController.text.trim(),
+      email: emailController.text.trim(),
+    );
+
+    debugPrint('Updating profile with data - Nama: ${updateRequest.nama}, Email: ${updateRequest.email}');
+
+    var response = await apiService.updateProfile(updateRequest);
+
+    if (response.statusCode == 200) {
+      debugPrint('Profile update successful');
+      
+      final updatedUserData = response.body['data'] ?? response.body;
+      final updatedUser = User.fromJson(updatedUserData);
+      
+      currentUser.value = updatedUser;
+      namaController.text = updatedUser.nama;
+      emailController.text = updatedUser.email;
+      
+      authService.updateUserData(updatedUser);
+      
+      debugPrint('Profile updated - Nama: ${currentUser.value?.nama}, Email: ${currentUser.value?.email}');
+    } else {
+      throw Exception(_extractErrorMessage(response));
     }
   }
 
@@ -226,7 +170,8 @@ class ProfileController extends GetxController {
     if (!_validatePasswordForm()) return;
 
     try {
-      isChangingPassword(true);
+      isChangingPassword.value = true;
+      AppSnackbar.updateLoading('password');
 
       final changePasswordRequest = ChangePasswordRequest(
         currentPassword: currentPasswordController.text,
@@ -237,36 +182,15 @@ class ProfileController extends GetxController {
       var response = await apiService.changePassword(changePasswordRequest);
 
       if (response.statusCode == 200) {
-        // Clear password form
         _clearPasswordForm();
-        
-        Get.snackbar(
-          'Success',
-          'Password berhasil diubah',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[800],
-        );
+        AppSnackbar.updateSuccess('password');
       } else {
-        final errorMessage = _extractErrorMessage(response);
-        Get.snackbar(
-          'Error',
-          'Gagal ubah password: $errorMessage',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[800],
-        );
+        throw Exception(_extractErrorMessage(response));
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Terjadi kesalahan: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-      );
+      StandardErrorHandler.handleUpdateError('password', e, context: 'Change Password');
     } finally {
-      isChangingPassword(false);
+      isChangingPassword.value = false;
     }
   }
 
@@ -294,39 +218,15 @@ class ProfileController extends GetxController {
   }
 
   bool _validateProfileForm() {
-    if (namaController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Nama tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final namaError = StandardFormValidation.validateMinLength(namaController.text, 2, 'Nama');
+    if (namaError != null) {
+      AppSnackbar.error(namaError);
       return false;
     }
 
-    if (namaController.text.trim().length < 2) {
-      Get.snackbar(
-        'Error',
-        'Nama minimal 2 karakter',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    if (emailController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Email tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    if (!GetUtils.isEmail(emailController.text.trim())) {
-      Get.snackbar(
-        'Error',
-        'Format email tidak valid',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final emailError = StandardFormValidation.validateEmail(emailController.text);
+    if (emailError != null) {
+      AppSnackbar.error(emailError);
       return false;
     }
 
@@ -334,57 +234,29 @@ class ProfileController extends GetxController {
   }
 
   bool _validatePasswordForm() {
-    if (currentPasswordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Password saat ini tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final currentPasswordError = StandardFormValidation.validateRequired(currentPasswordController.text, 'Password saat ini');
+    if (currentPasswordError != null) {
+      AppSnackbar.error(currentPasswordError);
       return false;
     }
 
-    if (newPasswordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Password baru tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final newPasswordError = StandardFormValidation.validateMinLength(newPasswordController.text, 8, 'Password baru');
+    if (newPasswordError != null) {
+      AppSnackbar.error(newPasswordError);
       return false;
     }
 
-    if (newPasswordController.text.length < 8) {
-      Get.snackbar(
-        'Error',
-        'Password baru minimal 8 karakter',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    if (confirmNewPasswordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Konfirmasi password baru tidak boleh kosong',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    if (newPasswordController.text != confirmNewPasswordController.text) {
-      Get.snackbar(
-        'Error',
-        'Password baru dan konfirmasi tidak sama',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+    final confirmPasswordError = StandardFormValidation.validatePasswordConfirmation(
+      confirmNewPasswordController.text, 
+      newPasswordController.text
+    );
+    if (confirmPasswordError != null) {
+      AppSnackbar.error(confirmPasswordError);
       return false;
     }
 
     if (currentPasswordController.text == newPasswordController.text) {
-      Get.snackbar(
-        'Error',
-        'Password baru harus berbeda dari password saat ini',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      AppSnackbar.error('Password baru harus berbeda dari password saat ini');
       return false;
     }
 

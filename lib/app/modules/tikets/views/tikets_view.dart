@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:frontend/app/modules/tikets/controllers/tikets_controller.dart';
 import 'package:frontend/app/data/models/tiket_model.dart';
+import 'package:frontend/app/data/models/user_model.dart';
 import 'package:frontend/app/core/widgets/app_loading.dart';
 import 'package:frontend/app/core/widgets/app_empty_state.dart';
 import 'package:frontend/app/widgets/layouts/main_layout.dart';
@@ -79,8 +80,9 @@ class TiketsView extends GetView<TiketsController> {
                               tooltip: 'Refresh',
                             ),
                             const SizedBox(width: 8),
+                            // Create button for Manager, Karyawan, and User
                             Obx(() => 
-                              controller.isUser
+                              controller.showCreateButton || controller.isUser
                                 ? FilledButton.icon(
                                     onPressed: controller.navigateToCreate,
                                     icon: const Icon(Icons.add),
@@ -145,6 +147,62 @@ class TiketsView extends GetView<TiketsController> {
   }
   
   Widget _buildFilterSection(bool isDesktop, bool isTablet) {
+    // Simplified filter for User/Klien - only search and date
+    if (controller.isUser) {
+      if (isDesktop) {
+        return Row(
+          children: [
+            // Search Field
+            Expanded(
+              flex: 3,
+              child: _buildSearchField(),
+            ),
+            const SizedBox(width: 16),
+            // Date From
+            Expanded(
+              flex: 2,
+              child: _buildDatePicker('Dari Tanggal', controller.dateFrom.value, 
+                (date) => controller.setDateFrom(date)),
+            ),
+            const SizedBox(width: 16),
+            // Date To
+            Expanded(
+              flex: 2,
+              child: _buildDatePicker('Sampai Tanggal', controller.dateTo.value,
+                (date) => controller.setDateTo(date)),
+            ),
+            const SizedBox(width: 16),
+            // Clear Filters Button
+            FilledButton.tonal(
+              onPressed: controller.clearFilters,
+              child: const Text('Clear Filters'),
+            ),
+          ],
+        );
+      } else {
+        return Column(
+          children: [
+            _buildSearchField(),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDatePicker('Dari', controller.dateFrom.value,
+                    (date) => controller.setDateFrom(date)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildDatePicker('Sampai', controller.dateTo.value,
+                    (date) => controller.setDateTo(date)),
+                ),
+              ],
+            ),
+          ],
+        );
+      }
+    }
+    
+    // Full filter for Admin, Manager, and Karyawan
     if (isDesktop) {
       return Column(
         children: [
@@ -288,7 +346,7 @@ class TiketsView extends GetView<TiketsController> {
             value: unit.id,
             child: Text(unit.nama),
           );
-        }).toList(),
+        }),
       ],
       onChanged: (value) {
         controller.setUnitFilter(value ?? 0);
@@ -365,7 +423,7 @@ class TiketsView extends GetView<TiketsController> {
             value: status.id,
             child: Text(status.nama),
           );
-        }).toList(),
+        }),
       ],
       onChanged: (value) {
         controller.setStatusFilter(value ?? 0);
@@ -661,9 +719,32 @@ class TiketsView extends GetView<TiketsController> {
                     ),
                   ),
                   const Spacer(),
+                  // Unit management actions for Manager
+                  if (controller.isManager || controller.isAdmin) ...[
+                    if (controller.canEditUnit(tiket))
+                      IconButton(
+                        icon: Icon(
+                          Icons.business,
+                          size: 18,
+                          color: Colors.blue.shade600,
+                        ),
+                        onPressed: () => _showQuickUnitEditDialog(tiket),
+                        tooltip: 'Edit Unit',
+                      ),
+                    if (controller.canReassignTicket(tiket))
+                      IconButton(
+                        icon: Icon(
+                          Icons.swap_horiz,
+                          size: 18,
+                          color: Colors.orange.shade600,
+                        ),
+                        onPressed: () => _showQuickReassignDialog(tiket),
+                        tooltip: 'Tugaskan Ulang',
+                      ),
+                  ],
                   if (controller.canDeleteTiket(tiket))
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.delete_outline,
                         size: 18,
                         color: Colors.red,
@@ -825,6 +906,26 @@ class TiketsView extends GetView<TiketsController> {
   }
   
   void _confirmDelete(Tiket tiket) {
+    // Get role-specific message
+    String warningMessage;
+    String additionalWarning = '';
+    
+  if (controller.isManager || controller.isAdmin) {
+      warningMessage = 'Sebagai Manager, Anda dapat menghapus tiket apapun. Apakah Anda yakin ingin menghapus tiket ini?';
+  if (controller.isCompletedTicket(tiket)) {
+        additionalWarning = 'Tiket ini sudah selesai dan dapat dihapus.';
+      }
+    } else if (controller.isKaryawan) {
+      if (tiket.idUser == controller.currentUser?.id) {
+        warningMessage = 'Anda hanya dapat menghapus tiket yang Anda buat sendiri. Apakah Anda yakin ingin menghapus tiket ini?';
+      } else {
+        // This shouldn't happen due to UI permissions, but just in case
+        warningMessage = 'Anda tidak memiliki izin untuk menghapus tiket ini.';
+      }
+    } else {
+      warningMessage = 'Apakah Anda yakin ingin menghapus tiket ini?';
+    }
+    
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(
@@ -841,7 +942,18 @@ class TiketsView extends GetView<TiketsController> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Apakah Anda yakin ingin menghapus tiket ini?'),
+            Text(warningMessage),
+            if (additionalWarning.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                additionalWarning,
+                style: const TextStyle(
+                  color: Colors.green,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -892,6 +1004,222 @@ class TiketsView extends GetView<TiketsController> {
               backgroundColor: Colors.red,
             ),
             child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showQuickUnitEditDialog(Tiket tiket) {
+    int? selectedUnitId = tiket.idUnit;
+    final reasonController = TextEditingController();
+    
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.business, color: Colors.blue.shade600),
+            const SizedBox(width: 12),
+            const Text('Edit Unit Tiket'),
+          ],
+        ),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tiket: ${tiket.kode}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tiket.judul,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Pilih Unit:'),
+                  const SizedBox(height: 8),
+                  Obx(() => Column(
+                    children: [
+                      // No unit option
+                      RadioListTile<int?>(
+                        title: const Text('Tidak ada unit'),
+                        value: null,
+                        groupValue: selectedUnitId,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedUnitId = value;
+                          });
+                        },
+                      ),
+                      // Available units
+                      ...controller.availableUnits.map((unit) {
+                        return RadioListTile<int>(
+                          title: Text(unit.nama),
+                          subtitle: unit.description != null 
+                            ? Text(unit.description!) 
+                            : null,
+                          value: unit.id,
+                          groupValue: selectedUnitId,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedUnitId = value;
+                            });
+                          },
+                        );
+                      }),
+                    ],
+                  )),
+                  const SizedBox(height: 12),
+                  const Text('Alasan (opsional):'),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: reasonController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Alasan perubahan unit...',
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (selectedUnitId != null) {
+                final unit = controller.availableUnits
+                    .firstWhere((u) => u.id == selectedUnitId);
+                final reason = reasonController.text.trim();
+                controller.updateTicketUnit(
+                  tiket, 
+                  unit, 
+                  reason: reason.isEmpty ? null : reason
+                );
+              }
+              Get.back();
+            },
+            child: const Text('Perbarui'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showQuickReassignDialog(Tiket tiket) {
+    User? selectedMember;
+    final reasonController = TextEditingController();
+    
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.swap_horiz, color: Colors.orange.shade600),
+            const SizedBox(width: 12),
+            const Text('Tugaskan Ulang ke Tim'),
+          ],
+        ),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tiket: ${tiket.kode}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tiket.judul,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Pilih Anggota Tim:'),
+                  const SizedBox(height: 8),
+                  Obx(() {
+                    if (controller.teamMembers.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'Tidak ada anggota tim tersedia',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      );
+                    }
+                    
+                    return Column(
+                      children: controller.teamMembers.map((member) {
+                        return RadioListTile<User>(
+                          title: Text(member.nama),
+                          subtitle: Text(member.email),
+                          value: member,
+                          groupValue: selectedMember,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedMember = value;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    );
+                  }),
+                  const SizedBox(height: 12),
+                  const Text('Alasan penugasan (opsional):'),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: reasonController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Alasan penugasan ulang...',
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (selectedMember != null) {
+                final reason = reasonController.text.trim();
+                controller.reassignTicketToTeamMember(
+                  tiket, 
+                  selectedMember!, 
+                  reason: reason.isEmpty ? null : reason
+                );
+              }
+              Get.back();
+            },
+            child: const Text('Tugaskan'),
           ),
         ],
       ),

@@ -969,11 +969,11 @@ class TiketDetailView extends GetView<TiketDetailController> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  items: [
-                    const DropdownMenuItem(value: 'rendah', child: Text('Rendah')),
-                    const DropdownMenuItem(value: 'sedang', child: Text('Sedang')),
-                    const DropdownMenuItem(value: 'tinggi', child: Text('Tinggi')),
-                    const DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
+                  items: const [
+                    DropdownMenuItem(value: 'rendah', child: Text('Rendah')),
+                    DropdownMenuItem(value: 'sedang', child: Text('Sedang')),
+                    DropdownMenuItem(value: 'tinggi', child: Text('Tinggi')),
+                    DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
                   ],
                   onChanged: (value) {
                     if (value != null) controller.selectedPriority.value = value;
@@ -1077,7 +1077,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                     },
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),
@@ -1157,7 +1157,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                             });
                           },
                         );
-                      }).toList(),
+                      }),
                       const SizedBox(height: 12),
                       const Text('Komentar (opsional):'),
                       const SizedBox(height: 6),
@@ -1229,7 +1229,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
                           },
                           isThreeLine: true,
                         );
-                      }).toList(),
+                      }),
                       const SizedBox(height: 12),
                       const Text('Komentar (opsional):'),
                       const SizedBox(height: 6),
@@ -1302,7 +1302,7 @@ class TiketDetailView extends GetView<TiketDetailController> {
           ),
           FilledButton(
             onPressed: () {
-              final k = komentarController.text.trim();
+              // komentar optional; controller handles without it
               controller.updateStatus(statusId);
               Get.back();
             },

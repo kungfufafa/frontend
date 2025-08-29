@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:frontend/app/core/models/api_response.dart';
 import 'package:frontend/app/data/models/user_model.dart';
 import 'package:frontend/app/data/models/tiket_model.dart';
 
@@ -147,7 +148,7 @@ class ApiService extends GetConnect {
       // Ensure we have a valid response
       if (response.statusCode == null) {
         logError('PATCH response has null status code', context: 'ApiService');
-        return Response(
+        return const Response(
           statusCode: 500,
           statusText: 'No response from server',
           body: {'message': 'No response from server'},
@@ -506,6 +507,145 @@ class ApiService extends GetConnect {
     // Stack trace hanya di debug mode dan jika perlu
     if (stackTrace != null && enableApiLogging) {
       debugPrint('   Stack: ${stackTrace.toString().split('\n').take(3).join('\n')}');
+    }
+  }
+
+  // === STANDARDIZED API RESPONSE METHODS ===
+
+  /// Wrapper method untuk standarisasi response handling
+  ApiResponse<T> wrapResponse<T>(Response response, {T Function(dynamic)? fromJson}) {
+    return ApiResponse.fromResponse(response, fromJson: fromJson);
+  }
+
+  /// Get standardized users list with ApiResponse wrapper
+  Future<ApiResponse<List<User>>> getUsersStandardized({Map<String, String>? query}) async {
+    try {
+      final response = await getUsers(query: query);
+      return wrapResponse<List<User>>(
+        response,
+        fromJson: (data) {
+          if (data is List) {
+            return data.map((item) => User.fromJson(item)).toList();
+          }
+          return <User>[];
+        },
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal memuat data users: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Create user with standardized response
+  Future<ApiResponse<User>> createUserStandardized(Map<String, dynamic> userData) async {
+    try {
+      final response = await createUser(userData);
+      return wrapResponse<User>(
+        response,
+        fromJson: (data) => User.fromJson(data),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal membuat user: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Update user with standardized response
+  Future<ApiResponse<User>> updateUserStandardized(int userId, Map<String, dynamic> userData) async {
+    try {
+      final response = await updateUser(userId, userData);
+      return wrapResponse<User>(
+        response,
+        fromJson: (data) => User.fromJson(data),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal memperbarui user: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Delete user with standardized response
+  Future<ApiResponse<void>> deleteUserStandardized(int userId) async {
+    try {
+      final response = await deleteUser(userId);
+      return wrapResponse<void>(response);
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal menghapus user: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Get standardized units list with ApiResponse wrapper
+  Future<ApiResponse<List<Unit>>> getUnitsStandardized({Map<String, String>? query}) async {
+    try {
+      final response = await getUnits(query: query);
+      return wrapResponse<List<Unit>>(
+        response,
+        fromJson: (data) {
+          if (data is List) {
+            return data.map((item) => Unit.fromJson(item)).toList();
+          }
+          return <Unit>[];
+        },
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal memuat data units: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Create unit with standardized response
+  Future<ApiResponse<Unit>> createUnitStandardized(Map<String, dynamic> unitData) async {
+    try {
+      final response = await createUnit(unitData);
+      return wrapResponse<Unit>(
+        response,
+        fromJson: (data) => Unit.fromJson(data),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal membuat unit: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Update unit with standardized response
+  Future<ApiResponse<Unit>> updateUnitStandardized(int unitId, Map<String, dynamic> unitData) async {
+    try {
+      final response = await updateUnit(unitId, unitData);
+      return wrapResponse<Unit>(
+        response,
+        fromJson: (data) => Unit.fromJson(data),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal memperbarui unit: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Delete unit with standardized response
+  Future<ApiResponse<void>> deleteUnitStandardized(int unitId) async {
+    try {
+      final response = await deleteUnit(unitId);
+      return wrapResponse<void>(response);
+    } catch (e) {
+      return ApiResponse.error(
+        message: 'Gagal menghapus unit: $e',
+        statusCode: 0,
+      );
     }
   }
 }

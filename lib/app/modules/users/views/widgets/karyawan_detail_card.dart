@@ -4,7 +4,7 @@ import 'package:frontend/app/data/models/tiket_model.dart';
 class KaryawanDetailCard extends StatelessWidget {
   final Karyawan karyawan;
   
-  const KaryawanDetailCard({Key? key, required this.karyawan}) : super(key: key);
+  const KaryawanDetailCard({super.key, required this.karyawan});
   
   @override
   Widget build(BuildContext context) {

@@ -47,6 +47,13 @@ class _MainLayoutState extends State<MainLayout> {
           route: '/users',
           roles: ['Administrator'],
         ),
+        const NavigationItem(
+          icon: Icons.business_outlined,
+          selectedIcon: Icons.business,
+          label: 'Units',
+          route: '/units',
+          roles: ['Administrator'],
+        ),
       ]);
     }
 
@@ -124,11 +131,9 @@ class _MainLayoutState extends State<MainLayout> {
     final index = _navigationItems.indexWhere(
       (item) => item.route == widget.currentRoute,
     );
-    if (index != -1) {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+    setState(() {
+      _selectedIndex = index != -1 ? index : 0; // Default to 0 if route not found
+    });
   }
 
   void _onDestinationSelected(int index) {
@@ -169,7 +174,7 @@ class _MainLayoutState extends State<MainLayout> {
                   child: NavigationRail(
                     extended: false,
                     backgroundColor: Colors.transparent,
-                    selectedIndex: _selectedIndex,
+                    selectedIndex: _navigationItems.isNotEmpty && _selectedIndex < _navigationItems.length ? _selectedIndex : 0,
                     onDestinationSelected: _onDestinationSelected,
                     labelType: NavigationRailLabelType.all,
                     useIndicator: true,
@@ -239,7 +244,7 @@ class _MainLayoutState extends State<MainLayout> {
                 child: widget.child,
               ),
               bottomNavigationBar: NavigationBar(
-                selectedIndex: _selectedIndex,
+                selectedIndex: _navigationItems.isNotEmpty && _selectedIndex < _navigationItems.length ? _selectedIndex : 0,
                 onDestinationSelected: _onDestinationSelected,
                 backgroundColor: colorScheme.surface,
                 indicatorColor: colorScheme.primary.withValues(alpha: 0.12),

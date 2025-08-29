@@ -54,10 +54,15 @@ class Tiket {
   factory Tiket.fromJson(Map<String, dynamic> json) {
     // Convert Indonesian priority to English for display
     String prioritasEng = json["prioritas"] ?? 'Medium';
-    if (prioritasEng == 'rendah') prioritasEng = 'Low';
-    else if (prioritasEng == 'sedang') prioritasEng = 'Medium';
-    else if (prioritasEng == 'tinggi') prioritasEng = 'High';
-    else if (prioritasEng == 'urgent' || prioritasEng == 'sangat_tinggi') prioritasEng = 'Urgent';
+    if (prioritasEng == 'rendah') {
+      prioritasEng = 'Low';
+    } else if (prioritasEng == 'sedang') {
+      prioritasEng = 'Medium';
+    } else if (prioritasEng == 'tinggi') {
+      prioritasEng = 'High';
+    } else if (prioritasEng == 'urgent' || prioritasEng == 'sangat_tinggi') {
+      prioritasEng = 'Urgent';
+    }
     
     return Tiket(
       id: json["id"] ?? 0,

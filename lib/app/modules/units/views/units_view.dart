@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/models/user_model.dart';
-import '../controllers/users_controller.dart';
-import 'widgets/user_card.dart';
-import 'widgets/users_filter_bar.dart';
-import 'widgets/user_form_dialog.dart';
+import '../../../data/models/tiket_model.dart';
+import '../controllers/units_controller.dart';
+import 'widgets/unit_card.dart';
+import 'widgets/unit_form_dialog.dart';
 import '../../../widgets/layouts/main_layout.dart';
 
-class UsersView extends GetView<UsersController> {
-  const UsersView({super.key});
+class UnitsView extends GetView<UnitsController> {
+  const UnitsView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     
     return MainLayout(
-      currentRoute: '/users',
+      currentRoute: '/units',
       child: Scaffold(
         backgroundColor: colorScheme.surfaceContainerLowest,
         appBar: AppBar(
           automaticallyImplyLeading: false,
           title: Text(
-            'Manajemen Users',
+            'Manajemen Unit',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -35,10 +34,10 @@ class UsersView extends GetView<UsersController> {
           titleSpacing: 24,
           actions: [
             FilledButton.icon(
-              onPressed: () => _showUserForm(),
-              icon: const Icon(Icons.person_add_outlined, size: 20),
+              onPressed: () => _showUnitForm(),
+              icon: const Icon(Icons.business_outlined, size: 20),
               label: const Text(
-                'Tambah User',
+                'Tambah Unit',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
@@ -76,8 +75,8 @@ class UsersView extends GetView<UsersController> {
                 ),
               ),
               child: SearchBar(
-                onChanged: controller.searchUsers,
-                hintText: 'Cari berdasarkan nama atau email',
+                onChanged: controller.searchUnits,
+                hintText: 'Cari berdasarkan nama unit atau kategori',
                 hintStyle: WidgetStateProperty.all(
                   TextStyle(
                     color: colorScheme.onSurfaceVariant,
@@ -116,9 +115,6 @@ class UsersView extends GetView<UsersController> {
               ),
             ),
             
-            // Filter bar
-            const UsersFilterBar(),
-            
             // Content area dengan spacing yang lebih elegant
             Expanded(
               child: Container(
@@ -127,7 +123,7 @@ class UsersView extends GetView<UsersController> {
                   color: colorScheme.surfaceContainerLowest,
                 ),
                 child: Obx(() {
-                  if (controller.isLoading.value && controller.users.isEmpty) {
+                  if (controller.isLoading.value && controller.filteredUnits.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -145,7 +141,7 @@ class UsersView extends GetView<UsersController> {
                           ),
                           const SizedBox(height: 24),
                           Text(
-                            'Memuat data users',
+                            'Memuat data unit',
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: colorScheme.onSurface,
                               fontWeight: FontWeight.w600,
@@ -164,7 +160,7 @@ class UsersView extends GetView<UsersController> {
                     );
                   }
                   
-                  if (controller.users.isEmpty) {
+                  if (controller.filteredUnits.isEmpty) {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(40),
@@ -183,14 +179,14 @@ class UsersView extends GetView<UsersController> {
                                 ),
                               ),
                               child: Icon(
-                                Icons.people_outline_rounded,
+                                Icons.business_outlined,
                                 size: 48,
                                 color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 32),
                             Text(
-                              'Belum ada users',
+                              'Belum ada unit',
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: colorScheme.onSurface,
                                 fontWeight: FontWeight.w700,
@@ -199,7 +195,7 @@ class UsersView extends GetView<UsersController> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Tambahkan user pertama untuk memulai\nmengelola tim Anda',
+                              'Tambahkan unit pertama untuk memulai\nmengelola organisasi Anda',
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w400,
@@ -209,10 +205,10 @@ class UsersView extends GetView<UsersController> {
                             ),
                             const SizedBox(height: 32),
                             FilledButton.icon(
-                              onPressed: () => _showUserForm(),
-                              icon: const Icon(Icons.person_add_outlined, size: 20),
+                              onPressed: () => _showUnitForm(),
+                              icon: const Icon(Icons.business_outlined, size: 20),
                               label: const Text(
-                                'Tambah User',
+                                'Tambah Unit',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
@@ -239,15 +235,16 @@ class UsersView extends GetView<UsersController> {
                   
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 40),
-                    itemCount: controller.users.length,
+                    itemCount: controller.filteredUnits.length,
                     itemBuilder: (context, index) {
-                      final user = controller.users[index];
+                      final unit = controller.filteredUnits[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 20),
-                        child: UserCard(
-                           user: user,
-                           onEdit: () => _showUserForm(user),
-                           onDelete: () => controller.deleteUser(user.id, user.nama),
+                        child: UnitCard(
+                           unit: unit,
+                           onEdit: () => _showUnitForm(unit),
+                           onDelete: () => controller.deleteUnit(unit.id, unit.nama),
+                           onManageEmployees: () => _showEmployeeManagement(unit),
                          ),
                       );
                     },
@@ -262,16 +259,91 @@ class UsersView extends GetView<UsersController> {
   }
 
   
-  void _showUserForm([User? user]) {
-    if (user != null) {
-      controller.prepareEditForm(user);
+  void _showUnitForm([Unit? unit]) {
+    if (unit != null) {
+      controller.prepareEditForm(unit);
     } else {
       controller.clearForm();
     }
     
     Get.dialog(
-      UserFormDialog(isEdit: user != null),
+      UnitFormDialog(isEdit: unit != null),
       barrierDismissible: false,
+    );
+  }
+  
+  void _showEmployeeManagement(Unit unit) {
+    controller.loadEmployeesForUnit(unit.id.toString());
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          width: 600,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Kelola Karyawan - ${unit.nama}',
+                style: Get.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Pilih karyawan yang akan ditugaskan ke unit ini:',
+                style: Get.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: Obx(() {
+                  if (controller.isLoadingEmployees.value) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: controller.availableEmployees.length,
+                    itemBuilder: (context, index) {
+                      final employee = controller.availableEmployees[index];
+                      final isAssigned = controller.unitEmployees.contains(employee.id.toString());
+                      
+                      return CheckboxListTile(
+                        title: Text(employee.nama),
+                        subtitle: Text(employee.email),
+                        value: isAssigned,
+                        onChanged: (bool? value) {
+                          if (value == true) {
+                            controller.assignEmployeeToUnit(unit.id.toString(), employee.id.toString());
+                          } else {
+                            controller.removeEmployeeFromUnit(unit.id.toString(), employee.id.toString());
+                          }
+                        },
+                      );
+                    },
+                  );
+                }),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(),
+                    child: const Text('Tutup'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:frontend/app/core/controllers/base_controller.dart';
 import 'package:frontend/app/services/api_service.dart';
-import 'package:frontend/app/services/auth_service.dart';
 import 'package:frontend/app/data/models/user_model.dart';
 import 'package:frontend/app/data/models/tiket_model.dart';
 
-class DashboardController extends GetxController {
-  final ApiService apiService = Get.find<ApiService>();
-  final AuthService authService = Get.find<AuthService>();
+class DashboardController extends BaseController {
+  // Remove duplicate service declarations since they're in BaseController
+  // final ApiService apiService = Get.find<ApiService>();
+  // final AuthService authService = Get.find<AuthService>();
 
-  // Observable states
-  var isLoading = false.obs;
+  // Observable states - keep isLoading from BaseController
+  // var isLoading = false.obs;
   
   // Common stats observables (ringkasan umum untuk header)
   var totalUsers = 0.obs;
@@ -367,13 +367,7 @@ class DashboardController extends GetxController {
 
       final user = currentUser;
       if (user == null) {
-        Get.snackbar(
-          'Error',
-          'User tidak ditemukan',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[800],
-        );
+        showErrorSnackbar('User tidak ditemukan');
         return;
       }
 
@@ -384,14 +378,7 @@ class DashboardController extends GetxController {
       await loadBasicDashboard();
 
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Gagal memuat data dashboard: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-      );
-      ApiService.logError('Dashboard load error', context: 'DashboardController', stackTrace: e);
+      handleError(e, context: 'loadDashboardData');
     } finally {
       isLoading.value = false;
     }
@@ -425,6 +412,12 @@ class DashboardController extends GetxController {
   /// Refresh dashboard data
   Future<void> refreshDashboard() async {
     await loadDashboardData();
+  }
+
+  /// Override BaseController refreshData method
+  @override
+  Future<void> refreshData() async {
+    await refreshDashboard();
   }
 
   /// Get current user
@@ -539,22 +532,10 @@ class DashboardController extends GetxController {
       });
       
       if (response.isOk) {
-        Get.snackbar(
-          'Success',
-          'Report exported successfully',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[800],
-        );
+        showSuccessSnackbar('Report exported successfully');
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to export report: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-      );
+      handleError(e, context: 'exportReport');
     } finally {
       isLoading.value = false;
     }

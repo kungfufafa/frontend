@@ -5,7 +5,7 @@ import '../../controllers/users_controller.dart';
 class UserFormDialog extends StatelessWidget {
   final bool isEdit;
   
-  const UserFormDialog({Key? key, required this.isEdit}) : super(key: key);
+  const UserFormDialog({super.key, required this.isEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +243,7 @@ class UserFormDialog extends StatelessWidget {
                                       ...controller.units.map((unit) => DropdownMenuItem<int>(
                                         value: unit.id,
                                         child: Text(unit.nama),
-                                      )).toList(),
+                                      )),
                                     ],
                                     onChanged: (value) {
                                       controller.selectedUnitId.value = value ?? 0;

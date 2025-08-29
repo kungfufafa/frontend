@@ -1,3 +1,4 @@
+// ignore_for_file: constant_identifier_names
 import 'package:get/get.dart';
 
 import '../middleware/auth_guard.dart';
@@ -11,6 +12,8 @@ import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/users/bindings/users_binding.dart';
 import '../modules/users/views/users_view.dart';
+import '../modules/units/bindings/units_binding.dart';
+import '../modules/units/views/units_view.dart';
 import '../modules/tikets/bindings/tikets_binding.dart';
 import '../modules/tikets/views/tikets_view.dart';
 import '../modules/tikets/bindings/tiket_detail_binding.dart';
@@ -58,6 +61,13 @@ class AppPages {
       name: _Paths.USERS,
       page: () => const UsersView(),
       binding: UsersBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.noTransition,
+    ),
+    GetPage(
+      name: _Paths.UNITS,
+      page: () => const UnitsView(),
+      binding: UnitsBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.noTransition,
     ),

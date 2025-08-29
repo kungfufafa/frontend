@@ -31,6 +31,13 @@ class AuthGuard extends GetMiddleware {
   bool _isProtectedRoute(String? route) {
     const protectedRoutes = [
       Routes.PROFILE,
+      Routes.DASHBOARD,
+      Routes.USERS,
+      Routes.UNITS,
+      Routes.TIKETS,
+      Routes.TIKET_DETAIL,
+      Routes.TIKET_CREATE,
+      Routes.TIKET_EDIT,
     ];
     
     return protectedRoutes.contains(route);

@@ -12,12 +12,12 @@ class UserCard extends StatelessWidget {
   final VoidCallback? onToggleStatus;
   
   const UserCard({
-    Key? key, 
+    super.key, 
     required this.user,
     this.onEdit,
     this.onDelete,
     this.onToggleStatus,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -355,23 +355,7 @@ class UserCard extends StatelessWidget {
      }
    }
    
-   IconData _getStatusIcon(bool isActive) {
-     if (isActive) {
-       return Icons.pause_circle_outline;
-     } else {
-       return Icons.play_circle_outline;
-     }
-   }
-   
-   String _getStatusTooltip(bool isActive) {
-     if (isActive) {
-       return 'Nonaktifkan User';
-     } else {
-       return 'Aktifkan User';
-     }
-   }
-   
-   String _formatDate(dynamic dateString) {
+  String _formatDate(dynamic dateString) {
       if (dateString == null) return 'Tidak diketahui';
       
       try {
@@ -382,32 +366,5 @@ class UserCard extends StatelessWidget {
       }
     }
     
-    // Helper method untuk membuat User object dari Map
-     User _createUserFromMap(Map<String, dynamic> userData) {
-       return User(
-         id: userData['id'] ?? 0,
-         nama: userData['name']?.toString() ?? '',
-         email: userData['email']?.toString() ?? '',
-         idRole: userData['role_id'] ?? 5,
-         isActive: userData['is_active'] == true || userData['is_active'] == 1 || userData['is_active'] == '1',
-         roleName: userData['role_name']?.toString(),
-         createdAt: userData['created_at'] != null 
-             ? DateTime.tryParse(userData['created_at'].toString()) ?? DateTime.now()
-             : DateTime.now(),
-         updatedAt: userData['updated_at'] != null 
-             ? DateTime.tryParse(userData['updated_at'].toString()) ?? DateTime.now()
-             : DateTime.now(),
-       );
-     }
-    
-    // Helper method untuk menampilkan dialog edit
-    void _showEditDialog() {
-      // Implementasi akan tergantung pada struktur dialog yang ada
-      // Untuk sementara, tampilkan snackbar sebagai placeholder
-      Get.snackbar(
-        'Info',
-        'Fitur edit akan segera tersedia',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
+   // Removed unused private helpers
   }

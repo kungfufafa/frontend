@@ -51,11 +51,11 @@ class AdminDashboardStats extends DashboardStats {
   final List<dynamic>? reports;
 
   AdminDashboardStats({
-    required int totalTikets,
-    required int openTikets,
-    required int inProgressTikets,
-    required int closedTikets,
-    required int resolvedTikets,
+    required super.totalTikets,
+    required super.openTikets,
+    required super.inProgressTikets,
+    required super.closedTikets,
+    required super.resolvedTikets,
     required this.totalUsers,
     required this.totalKaryawans,
     required this.totalUnits,
@@ -63,17 +63,9 @@ class AdminDashboardStats extends DashboardStats {
     this.tiketsByStatus,
     this.tiketsByPriority,
     this.reports,
-    Map<String, dynamic>? additionalStats,
-    List<Tiket>? recentTikets,
-  }) : super(
-    totalTikets: totalTikets,
-    openTikets: openTikets,
-    inProgressTikets: inProgressTikets,
-    closedTikets: closedTikets,
-    resolvedTikets: resolvedTikets,
-    additionalStats: additionalStats,
-    recentTikets: recentTikets,
-  );
+    super.additionalStats,
+    super.recentTikets,
+  });
 
   factory AdminDashboardStats.fromJson(Map<String, dynamic> json) {
     final base = DashboardStats.fromJson(json);
@@ -110,26 +102,18 @@ class ManagerDashboardStats extends DashboardStats {
   final Map<String, int>? tiketsByKaryawan;
 
   ManagerDashboardStats({
-    required int totalTikets,
-    required int openTikets,
-    required int inProgressTikets,
-    required int closedTikets,
-    required int resolvedTikets,
+    required super.totalTikets,
+    required super.openTikets,
+    required super.inProgressTikets,
+    required super.closedTikets,
+    required super.resolvedTikets,
     required this.unitTikets,
     required this.assignedKaryawans,
     this.unitPerformance,
     this.tiketsByKaryawan,
-    Map<String, dynamic>? additionalStats,
-    List<Tiket>? recentTikets,
-  }) : super(
-    totalTikets: totalTikets,
-    openTikets: openTikets,
-    inProgressTikets: inProgressTikets,
-    closedTikets: closedTikets,
-    resolvedTikets: resolvedTikets,
-    additionalStats: additionalStats,
-    recentTikets: recentTikets,
-  );
+    super.additionalStats,
+    super.recentTikets,
+  });
 
   factory ManagerDashboardStats.fromJson(Map<String, dynamic> json) {
     final base = DashboardStats.fromJson(json);
@@ -160,27 +144,19 @@ class KaryawanDashboardStats extends DashboardStats {
   final double? averageResolutionTime;
 
   KaryawanDashboardStats({
-    required int totalTikets,
-    required int openTikets,
-    required int inProgressTikets,
-    required int closedTikets,
-    required int resolvedTikets,
+    required super.totalTikets,
+    required super.openTikets,
+    required super.inProgressTikets,
+    required super.closedTikets,
+    required super.resolvedTikets,
     required this.myTikets,
     required this.completedTikets,
     required this.pendingTikets,
     this.myAssignedTikets,
     this.averageResolutionTime,
-    Map<String, dynamic>? additionalStats,
-    List<Tiket>? recentTikets,
-  }) : super(
-    totalTikets: totalTikets,
-    openTikets: openTikets,
-    inProgressTikets: inProgressTikets,
-    closedTikets: closedTikets,
-    resolvedTikets: resolvedTikets,
-    additionalStats: additionalStats,
-    recentTikets: recentTikets,
-  );
+    super.additionalStats,
+    super.recentTikets,
+  });
 
   factory KaryawanDashboardStats.fromJson(Map<String, dynamic> json) {
     final base = DashboardStats.fromJson(json);
@@ -210,25 +186,17 @@ class DireksiDashboardStats extends DashboardStats {
   final List<dynamic>? departmentPerformance;
 
   DireksiDashboardStats({
-    required int totalTikets,
-    required int openTikets,
-    required int inProgressTikets,
-    required int closedTikets,
-    required int resolvedTikets,
+    required super.totalTikets,
+    required super.openTikets,
+    required super.inProgressTikets,
+    required super.closedTikets,
+    required super.resolvedTikets,
     this.performanceReports,
     this.overallMetrics,
     this.departmentPerformance,
-    Map<String, dynamic>? additionalStats,
-    List<Tiket>? recentTikets,
-  }) : super(
-    totalTikets: totalTikets,
-    openTikets: openTikets,
-    inProgressTikets: inProgressTikets,
-    closedTikets: closedTikets,
-    resolvedTikets: resolvedTikets,
-    additionalStats: additionalStats,
-    recentTikets: recentTikets,
-  );
+    super.additionalStats,
+    super.recentTikets,
+  });
 
   factory DireksiDashboardStats.fromJson(Map<String, dynamic> json) {
     final base = DashboardStats.fromJson(json);
@@ -253,24 +221,16 @@ class UserDashboardStats extends DashboardStats {
   final List<Tiket>? mySubmittedTikets;
 
   UserDashboardStats({
-    required int totalTikets,
-    required int openTikets,
-    required int inProgressTikets,
-    required int closedTikets,
-    required int resolvedTikets,
+    required super.totalTikets,
+    required super.openTikets,
+    required super.inProgressTikets,
+    required super.closedTikets,
+    required super.resolvedTikets,
     required this.myTikets,
     this.mySubmittedTikets,
-    Map<String, dynamic>? additionalStats,
-    List<Tiket>? recentTikets,
-  }) : super(
-    totalTikets: totalTikets,
-    openTikets: openTikets,
-    inProgressTikets: inProgressTikets,
-    closedTikets: closedTikets,
-    resolvedTikets: resolvedTikets,
-    additionalStats: additionalStats,
-    recentTikets: recentTikets,
-  );
+    super.additionalStats,
+    super.recentTikets,
+  });
 
   factory UserDashboardStats.fromJson(Map<String, dynamic> json) {
     final base = DashboardStats.fromJson(json);

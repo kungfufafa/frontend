@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class PriorityBadge extends StatelessWidget {
   final String priority;
 
-  const PriorityBadge({Key? key, required this.priority}) : super(key: key);
+  const PriorityBadge({super.key, required this.priority});
 
   @override
   Widget build(BuildContext context) {
