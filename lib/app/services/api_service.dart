@@ -19,7 +19,7 @@ class ApiService extends GetConnect {
   @override
   void onInit() {
     // Setup dasar untuk MVP
-    httpClient.baseUrl = 'http://backend.test/api/v1';
+    httpClient.baseUrl = 'https://skripsipandu.rizqis.com/api/v1';
     httpClient.defaultContentType = "application/json";
     httpClient.timeout = const Duration(seconds: 10);
     
@@ -431,7 +431,7 @@ class ApiService extends GetConnect {
   static void _logRequest(dynamic request) {
     try {
       final method = request.method;
-      final url = request.url.toString().replaceAll('http://backend.test/api/v1', '');
+      final url = request.url.toString().replaceAll('https://skripsipandu.rizqis.com/api/v1', '');
       
       debugPrint('🚀 $method $url');
       
@@ -462,7 +462,7 @@ class ApiService extends GetConnect {
   static void _logResponse(dynamic request, Response response) {
     try {
       final method = request.method;
-      final url = request.url.toString().replaceAll('http://backend.test/api/v1', '');
+      final url = request.url.toString().replaceAll('https://skripsipandu.rizqis.com/api/v1', '');
       final statusCode = response.statusCode;
       
       // Emoji berdasarkan status
