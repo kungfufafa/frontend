@@ -1,0 +1,15 @@
+[build]
+# ✅ This is where Flutter outputs the web build
+publish = "build/web"
+
+# ✅ Install Flutter (pinned), enable web, build
+command = """
+git clone --depth 1 -b stable https://github.com/flutter/flutter.git $HOME/flutter && \
+export PATH="$HOME/flutter/bin:$PATH" && \
+flutter config --enable-web && \
+flutter --version && \
+flutter precache --web && \
+flutter pub get && \
+flutter build web --release && \
+test -d build/web && ls -la build/web
+"""
