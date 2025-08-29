@@ -17,9 +17,15 @@ class UnitsController extends BaseController {
   var editingUnitId = 0.obs;
   var selectedUnitForAssignment = 0.obs;
   
-  // Employee management
+  // Employee management - NEW CHECKLIST SYSTEM
   var availableEmployees = <User>[].obs;
   var unitEmployees = <String>[].obs;
+  
+  // Enhanced employee checklist system
+  var allEmployeesForChecklist = <Karyawan>[].obs;
+  var employeeChecklistStatus = <int, bool>{}.obs; // employeeId -> isAssignedToCurrentUnit
+  var showOnlyUnassigned = false.obs;
+  var currentManagingUnitId = 0.obs;
 
   // Form controllers untuk add/edit unit
   final TextEditingController namaUnitController = TextEditingController();
@@ -71,7 +77,7 @@ class UnitsController extends BaseController {
   void updatePermissions() {
     final currentUser = authService.user;
     canManageUnitsObs.value = currentUser?.isAdmin() == true || currentUser?.isManager() == true;
-    canDeleteUnitsObs.value = currentUser?.isAdmin() == true;
+    canDeleteUnitsObs.value = currentUser?.isAdmin() == true || currentUser?.isManager() == true;
   }
 
   // Load units
@@ -245,6 +251,14 @@ class UnitsController extends BaseController {
   List<Karyawan> getUnassignedKaryawans() {
     return karyawans.where((karyawan) => karyawan.idUnit == 0).toList();
   }
+  
+  // Get filtered employees for checklist display
+  List<Karyawan> get filteredEmployeesForChecklist {
+    if (showOnlyUnassigned.value) {
+      return allEmployeesForChecklist.where((emp) => emp.idUnit == 0).toList();
+    }
+    return allEmployeesForChecklist;
+  }
 
   // Prepare form for editing
   void prepareEditForm(Unit unit) {
@@ -288,7 +302,7 @@ class UnitsController extends BaseController {
   // Check if current user can delete units
   bool get canDeleteUnits {
     final currentUser = authService.user;
-    return currentUser?.isAdmin() == true;
+    return currentUser?.isAdmin() == true || currentUser?.isManager() == true;
   }
 
   // Search units
@@ -310,79 +324,148 @@ class UnitsController extends BaseController {
     descriptionController.clear();
   }
   
-  // Load employees for unit management
-   Future<void> loadEmployeesForUnit(String unitId) async {
-     try {
-       isLoadingEmployees.value = true;
-       
-       // Load all employees (karyawan role)
-       final response = await apiService.getUsers();
-       
-       if (response.isOk && response.body['success'] == true) {
-         dynamic data;
-         
-         // Handle different response structures
-         if (response.body is List) {
-           data = response.body;
-         } else if (response.body is Map<String, dynamic>) {
-           final responseMap = response.body as Map<String, dynamic>;
-           
-           if (responseMap.containsKey('data')) {
-             final dataField = responseMap['data'];
-             
-             if (dataField is Map<String, dynamic> && dataField.containsKey('data')) {
-               data = dataField['data'];
-             } else {
-               data = dataField;
-             }
-           }
-         }
-         
-         if (data is List) {
-            final allUsers = data.map((item) => User.fromJson(item)).toList();
-            availableEmployees.value = allUsers.where((user) => user.isKaryawan()).toList();
-          }
-       }
-       
-       // Load current unit employees (this would need API endpoint)
-       // For now, we'll use empty list
-       unitEmployees.value = [];
-       
-     } catch (e) {
-       handleError(e, context: 'loadEmployeesForUnit');
-     } finally {
-       isLoadingEmployees.value = false;
-     }
-   }
-  
-  // Assign employee to unit
-  Future<void> assignEmployeeToUnit(String unitId, String employeeId) async {
+  // Load all karyawans with unit assignment status for checklist
+  Future<void> loadAllKaryawansWithUnitStatus(int currentUnitId) async {
     try {
-      // This would need API endpoint to assign employee to unit
-      // For now, we'll just update local state
-      if (!unitEmployees.contains(employeeId)) {
-        unitEmployees.add(employeeId);
+      isLoadingEmployees.value = true;
+      currentManagingUnitId.value = currentUnitId;
+      debugPrint('🔄 Loading all karyawans for unit assignment checklist...');
+      
+      // Load all employees
+      final allEmployeesResponse = await apiService.getKaryawans();
+      
+      if (allEmployeesResponse.isOk && allEmployeesResponse.body['success'] == true) {
+        final data = allEmployeesResponse.body['data'] ?? allEmployeesResponse.body;
+        final List<dynamic> items = data is List ? data : (data['data'] ?? []);
+        
+        final allKaryawans = items.map((item) => Karyawan.fromJson(item)).toList();
+        
+        // Create checklist status map
+        final statusMap = <int, bool>{};
+        for (final karyawan in allKaryawans) {
+          statusMap[karyawan.id] = karyawan.idUnit == currentUnitId;
+        }
+        employeeChecklistStatus.value = statusMap;
+        
+        // Store all employees for display
+        allEmployeesForChecklist.value = allKaryawans;
+        
+        debugPrint('✅ Loaded ${allKaryawans.length} karyawans for checklist');
+        debugPrint('📋 Checklist status: ${employeeChecklistStatus.length} entries');
+      } else {
+        debugPrint('❌ Failed to load karyawans: ${allEmployeesResponse.body}');
+        throw Exception(allEmployeesResponse.body['message'] ?? 'Gagal memuat data karyawan');
       }
-      showSuccessSnackbar('Karyawan berhasil ditugaskan ke unit');
     } catch (e) {
-      handleError(e, context: 'assignEmployeeToUnit');
+      handleError(e, context: 'loadAllKaryawansWithUnitStatus');
+    } finally {
+      isLoadingEmployees.value = false;
     }
   }
   
-  // Remove employee from unit
-  Future<void> removeEmployeeFromUnit(String unitId, String employeeId) async {
+  // Toggle employee unit assignment (checklist functionality)
+  Future<void> toggleEmployeeUnitAssignment(int karyawanId, int unitId, bool shouldAssign) async {
     try {
-      // This would need API endpoint to remove employee from unit
-      // For now, we'll just update local state
-      unitEmployees.remove(employeeId);
-      showSuccessSnackbar('Karyawan berhasil dihapus dari unit');
+      debugPrint('🔄 Toggling employee $karyawanId assignment to unit $unitId: $shouldAssign');
+      
+      // Optimistic update for immediate UI feedback
+      employeeChecklistStatus[karyawanId] = shouldAssign;
+      
+      final transferData = {
+        'id_unit': shouldAssign ? unitId : 0 // 0 means unassigned
+      };
+      
+      final response = await apiService.updateKaryawan(karyawanId, transferData);
+      
+      if (response.isOk && response.body['success'] == true) {
+        // Update employee data in local list
+        final employeeIndex = allEmployeesForChecklist.indexWhere(
+          (emp) => emp.id == karyawanId
+        );
+        
+        if (employeeIndex != -1) {
+          final updatedEmployee = Karyawan(
+            id: allEmployeesForChecklist[employeeIndex].id,
+            idUser: allEmployeesForChecklist[employeeIndex].idUser,
+            idUnit: shouldAssign ? unitId : 0,
+            nama: allEmployeesForChecklist[employeeIndex].nama,
+            nik: allEmployeesForChecklist[employeeIndex].nik,
+            tanggalLahir: allEmployeesForChecklist[employeeIndex].tanggalLahir,
+            jenisKelamin: allEmployeesForChecklist[employeeIndex].jenisKelamin,
+            nomorTelepon: allEmployeesForChecklist[employeeIndex].nomorTelepon,
+            alamat: allEmployeesForChecklist[employeeIndex].alamat,
+            createdAt: allEmployeesForChecklist[employeeIndex].createdAt,
+            updatedAt: DateTime.now(),
+            user: allEmployeesForChecklist[employeeIndex].user,
+            unit: shouldAssign ? units.where((u) => u.id == unitId).isNotEmpty ? units.where((u) => u.id == unitId).first : null : null,
+          );
+          allEmployeesForChecklist[employeeIndex] = updatedEmployee;
+        }
+        
+        showSuccessSnackbar(shouldAssign 
+          ? 'Karyawan berhasil ditugaskan ke unit'
+          : 'Karyawan berhasil dikeluarkan dari unit');
+          
+        // Refresh global karyawan list
+        await loadKaryawans();
+        
+        debugPrint('✅ Employee assignment updated successfully');
+      } else {
+        // Revert optimistic update on failure
+        employeeChecklistStatus[karyawanId] = !shouldAssign;
+        debugPrint('❌ API error: ${response.body}');
+        throw Exception(response.body['message'] ?? 'Gagal mengubah penugasan');
+      }
     } catch (e) {
-      handleError(e, context: 'removeEmployeeFromUnit');
+      // Revert optimistic update on error
+      employeeChecklistStatus[karyawanId] = !shouldAssign;
+      StandardErrorHandler.handleUpdateError('penugasan karyawan', e);
+    }
+  }
+  
+  // Transfer employee to specific unit (enhanced method)
+  Future<void> transferEmployeeToUnit(int karyawanId, int targetUnitId) async {
+    try {
+      isLoading.value = true;
+      showLoadingSnackbar('transfer karyawan');
+      
+      debugPrint('🔄 Transferring employee $karyawanId to unit $targetUnitId...');
+      
+      final transferData = {'id_unit': targetUnitId};
+      
+      final response = await apiService.updateKaryawan(karyawanId, transferData);
+      
+      if (response.isOk && response.body['success'] == true) {
+        showSuccessSnackbar('Karyawan berhasil dipindahkan ke unit');
+        
+        // Refresh both source and target unit data
+        await refreshUnitsData();
+        
+        // Auto-refresh current dialog if open
+        if (currentManagingUnitId.value > 0) {
+          await loadAllKaryawansWithUnitStatus(currentManagingUnitId.value);
+        }
+        
+        debugPrint('✅ Employee transfer completed successfully');
+      } else {
+        debugPrint('❌ Transfer failed: ${response.body}');
+        throw Exception(response.body['message'] ?? 'Transfer gagal');
+      }
+    } catch (e) {
+      StandardErrorHandler.handleUpdateError('transfer karyawan', e);
+    } finally {
+      isLoading.value = false;
     }
   }
 
   // Refresh units data
   Future<void> refreshUnits() async {
+    await loadUnits();
+    await loadKaryawans();
+  }
+  
+  // Refresh units data (enhanced method)
+  Future<void> refreshUnitsData() async {
     await loadUnits();
     await loadKaryawans();
   }

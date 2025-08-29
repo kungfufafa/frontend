@@ -4,6 +4,7 @@ import '../../../data/models/tiket_model.dart';
 import '../controllers/units_controller.dart';
 import 'widgets/unit_card.dart';
 import 'widgets/unit_form_dialog.dart';
+import 'widgets/employee_management_dialog.dart';
 import '../../../widgets/layouts/main_layout.dart';
 
 class UnitsView extends GetView<UnitsController> {
@@ -33,29 +34,30 @@ class UnitsView extends GetView<UnitsController> {
           centerTitle: false,
           titleSpacing: 24,
           actions: [
-            FilledButton.icon(
-              onPressed: () => _showUnitForm(),
-              icon: const Icon(Icons.business_outlined, size: 20),
-              label: const Text(
-                'Tambah Unit',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+            if (controller.canManageUnits)
+              FilledButton.icon(
+                onPressed: () => _showUnitForm(),
+                icon: const Icon(Icons.business_outlined, size: 20),
+                label: const Text(
+                  'Tambah Unit',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
                 ),
               ),
-              style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-            ),
             const SizedBox(width: 24),
           ],
         ),
@@ -242,9 +244,9 @@ class UnitsView extends GetView<UnitsController> {
                         padding: const EdgeInsets.only(bottom: 20),
                         child: UnitCard(
                            unit: unit,
-                           onEdit: () => _showUnitForm(unit),
-                           onDelete: () => controller.deleteUnit(unit.id, unit.nama),
-                           onManageEmployees: () => _showEmployeeManagement(unit),
+                           onEdit: controller.canManageUnits ? () => _showUnitForm(unit) : null,
+                           onDelete: controller.canDeleteUnits ? () => controller.deleteUnit(unit.id, unit.nama) : null,
+                           onManageEmployees: controller.canManageUnits ? () => _showEmployeeManagement(unit) : null,
                          ),
                       );
                     },
@@ -273,77 +275,9 @@ class UnitsView extends GetView<UnitsController> {
   }
   
   void _showEmployeeManagement(Unit unit) {
-    controller.loadEmployeesForUnit(unit.id.toString());
-    
     Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          width: 600,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Kelola Karyawan - ${unit.nama}',
-                style: Get.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Pilih karyawan yang akan ditugaskan ke unit ini:',
-                style: Get.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: Obx(() {
-                  if (controller.isLoadingEmployees.value) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: controller.availableEmployees.length,
-                    itemBuilder: (context, index) {
-                      final employee = controller.availableEmployees[index];
-                      final isAssigned = controller.unitEmployees.contains(employee.id.toString());
-                      
-                      return CheckboxListTile(
-                        title: Text(employee.nama),
-                        subtitle: Text(employee.email),
-                        value: isAssigned,
-                        onChanged: (bool? value) {
-                          if (value == true) {
-                            controller.assignEmployeeToUnit(unit.id.toString(), employee.id.toString());
-                          } else {
-                            controller.removeEmployeeFromUnit(unit.id.toString(), employee.id.toString());
-                          }
-                        },
-                      );
-                    },
-                  );
-                }),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Get.back(),
-                    child: const Text('Tutup'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      EmployeeManagementDialog(unit: unit),
+      barrierDismissible: false,
     );
   }
 }

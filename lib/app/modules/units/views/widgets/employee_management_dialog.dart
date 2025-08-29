@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:frontend/app/data/models/user_model.dart';
 import 'package:frontend/app/data/models/tiket_model.dart';
+import 'package:frontend/app/modules/units/views/widgets/employee_checklist_card.dart';
+import 'package:frontend/app/modules/units/views/widgets/employee_filter_panel.dart';
 import '../../controllers/units_controller.dart';
 
 class EmployeeManagementDialog extends StatelessWidget {
@@ -13,15 +14,15 @@ class EmployeeManagementDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<UnitsController>();
     
-    // Load employees when dialog opens
+    // Load employees with checklist status when dialog opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadEmployeesForUnit(unit.id.toString());
+      controller.loadAllKaryawansWithUnitStatus(unit.id);
     });
     
     return Dialog(
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxWidth: 700, maxHeight: 600),
+        width: MediaQuery.of(context).size.width * 0.95,
+        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 700),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -66,122 +67,130 @@ class EmployeeManagementDialog extends StatelessWidget {
             
             const SizedBox(height: 24),
             
+            // Filter Panel
+            Obx(() => EmployeeFilterPanel(
+              units: controller.units,
+              selectedUnitId: controller.currentManagingUnitId.value > 0 ? controller.currentManagingUnitId.value : null,
+              showOnlyUnassigned: controller.showOnlyUnassigned.value,
+              onUnitChanged: (unitId) {
+                if (unitId != null) {
+                  controller.loadAllKaryawansWithUnitStatus(unitId);
+                }
+              },
+              onUnassignedToggle: (value) {
+                controller.showOnlyUnassigned.value = value;
+              },
+            )),
+            
+            const SizedBox(height: 16),
+            
+            // Employee Checklist
             Expanded(
               child: Obx(() {
                 if (controller.isLoadingEmployees.value) {
                   return const Center(
-                    child: CircularProgressIndicator(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading employees...'),
+                      ],
+                    ),
                   );
                 }
                 
-                return Row(
+                if (controller.currentManagingUnitId.value == 0) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.info_outline, size: 48, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'Pilih unit untuk mengelola karyawan',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                final filteredEmployees = controller.filteredEmployeesForChecklist;
+                
+                if (filteredEmployees.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.people_outline, size: 48, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text(
+                          controller.showOnlyUnassigned.value 
+                            ? 'Tidak ada karyawan yang belum ditugaskan'
+                            : 'Tidak ada karyawan tersedia',
+                          style: const TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Available employees
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    // Header with count
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
                         children: [
-                          const Text(
-                            'Karyawan Tersedia',
-                            style: TextStyle(
+                          Text(
+                            'Daftar Karyawan (${filteredEmployees.length})',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: controller.availableEmployees.isEmpty
-                                  ? const Center(
-                                      child: Text(
-                                        'Tidak ada karyawan tersedia',
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      padding: const EdgeInsets.all(8),
-                                      itemCount: controller.availableEmployees.length,
-                                      itemBuilder: (context, index) {
-                                        final employee = controller.availableEmployees[index];
-                                        return _buildEmployeeCard(
-                                          employee,
-                                          isAssigned: false,
-                                          onTap: () => controller.assignEmployeeToUnit(unit.id.toString(), employee.id.toString()),
-                                        );
-                                      },
-                                    ),
+                          const Spacer(),
+                          Text(
+                            'Centang untuk menugaskan ke unit',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    const SizedBox(width: 16),
-                    
-                    // Arrow
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.arrow_forward,
-                          color: Colors.grey[400],
-                          size: 32,
-                        ),
-                      ],
-                    ),
-                    
-                    const SizedBox(width: 16),
-                    
-                    // Unit employees
+                    // Employee List
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Karyawan di Unit',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: controller.unitEmployees.isEmpty
-                                  ? const Center(
-                                      child: Text(
-                                        'Belum ada karyawan di unit ini',
-                                        style: TextStyle(color: Colors.grey),
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      padding: const EdgeInsets.all(8),
-                                      itemCount: controller.unitEmployees.length,
-                                      itemBuilder: (context, index) {
-                                        final employeeId = controller.unitEmployees[index];
-                                        // Find the employee from available employees by ID
-                                        final employee = controller.availableEmployees.firstWhereOrNull(
-                                          (emp) => emp.id.toString() == employeeId,
-                                        );
-                                        if (employee == null) return const SizedBox.shrink();
-                                        return _buildEmployeeCard(
-                                          employee,
-                                          isAssigned: true,
-                                          onTap: () => controller.removeEmployeeFromUnit(unit.id.toString(), employee.id.toString()),
-                                        );
-                                      },
-                                    ),
-                            ),
-                          ),
-                        ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(8),
+                          itemCount: filteredEmployees.length,
+                          itemBuilder: (context, index) {
+                            final employee = filteredEmployees[index];
+                            final isAssigned = controller.employeeChecklistStatus[employee.id] ?? false;
+                            
+                            return EmployeeChecklistCard(
+                              employee: employee,
+                              isAssignedToCurrentUnit: isAssigned,
+                              currentUnit: controller.units.where((u) => u.id == controller.currentManagingUnitId.value).isNotEmpty ? controller.units.where((u) => u.id == controller.currentManagingUnitId.value).first : null,
+                              onToggleAssignment: () {
+                                controller.toggleEmployeeUnitAssignment(
+                                  employee.id,
+                                  controller.currentManagingUnitId.value,
+                                  !isAssigned,
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],
@@ -191,10 +200,25 @@ class EmployeeManagementDialog extends StatelessWidget {
             
             const SizedBox(height: 24),
             
-            // Close button
+            // Action buttons
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Stats
+                Obx(() {
+                  final totalAssigned = controller.employeeChecklistStatus.values
+                      .where((assigned) => assigned)
+                      .length;
+                  return Text(
+                    'Ditugaskan: $totalAssigned karyawan',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  );
+                }),
+                
+                // Close button
                 ElevatedButton(
                   onPressed: () => Get.back(),
                   child: const Text('Selesai'),
@@ -202,34 +226,6 @@ class EmployeeManagementDialog extends StatelessWidget {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildEmployeeCard(User employee, {required bool isAssigned, required VoidCallback onTap}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: isAssigned ? Colors.green[100] : Colors.blue[100],
-          child: Icon(
-            Icons.person,
-            color: isAssigned ? Colors.green[700] : Colors.blue[700],
-          ),
-        ),
-        title: Text(
-          employee.nama,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        subtitle: Text(employee.email),
-        trailing: IconButton(
-          onPressed: onTap,
-          icon: Icon(
-            isAssigned ? Icons.remove_circle : Icons.add_circle,
-            color: isAssigned ? Colors.red : Colors.green,
-          ),
-          tooltip: isAssigned ? 'Keluarkan dari unit' : 'Tambahkan ke unit',
         ),
       ),
     );

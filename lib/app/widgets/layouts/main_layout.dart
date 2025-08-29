@@ -37,6 +37,19 @@ class _MainLayoutState extends State<MainLayout> {
       ),
     ];
 
+    // Admin and Manager shared menus
+    if (user.isAdmin() || user.isManager()) {
+      items.addAll([
+        const NavigationItem(
+          icon: Icons.business_outlined,
+          selectedIcon: Icons.business,
+          label: 'Units',
+          route: '/units',
+          roles: ['Administrator', 'Manager'],
+        ),
+      ]);
+    }
+
     // Administrator specific menus
     if (user.isAdmin()) {
       items.addAll([
@@ -45,13 +58,6 @@ class _MainLayoutState extends State<MainLayout> {
           selectedIcon: Icons.people,
           label: 'Users',
           route: '/users',
-          roles: ['Administrator'],
-        ),
-        const NavigationItem(
-          icon: Icons.business_outlined,
-          selectedIcon: Icons.business,
-          label: 'Units',
-          route: '/units',
           roles: ['Administrator'],
         ),
       ]);
