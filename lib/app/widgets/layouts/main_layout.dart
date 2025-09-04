@@ -54,6 +54,13 @@ class _MainLayoutState extends State<MainLayout> {
     if (user.isAdmin()) {
       items.addAll([
         const NavigationItem(
+          icon: Icons.confirmation_number_outlined,
+          selectedIcon: Icons.confirmation_number,
+          label: 'Tiket',
+          route: '/tikets',
+          roles: ['Administrator'],
+        ),
+        const NavigationItem(
           icon: Icons.people_outline,
           selectedIcon: Icons.people,
           label: 'Users',

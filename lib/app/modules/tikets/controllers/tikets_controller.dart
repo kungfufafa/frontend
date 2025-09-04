@@ -108,13 +108,13 @@ class TiketsController extends BaseController {
   
   // UI Permission checks
   bool get canCreateTicket {
-    // Manager and Karyawan can create tickets
-    return isManager || isKaryawan || isUser;
+    // Admin, Manager, Karyawan, and User can create tickets
+    return isAdmin || isManager || isKaryawan || isUser;
   }
   
   bool get showCreateButton {
-    // Show create button for Manager and Karyawan
-    return isManager || isKaryawan;
+    // Show create button for Admin, Manager, and Karyawan
+    return isAdmin || isManager || isKaryawan;
   }
   
   @override

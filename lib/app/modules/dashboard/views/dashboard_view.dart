@@ -1014,8 +1014,21 @@ class DashboardView extends GetView<DashboardController> {
     return Obx(() {
       final cards = <Widget>[];
       
-      // Admin - Users management
+      // Admin - Tickets and Users management
       if (controller.isAdmin) {
+        cards.add(
+          Expanded(
+            child: _buildQuickActionCard(
+              context,
+              'Tiket',
+              'Kelola tiket support',
+              Icons.confirmation_number_outlined,
+              Colors.purple,
+              () => Get.toNamed('/tikets'),
+            ),
+          ),
+        );
+        cards.add(const SizedBox(width: 16));
         cards.add(
           Expanded(
             child: _buildQuickActionCard(
@@ -1031,8 +1044,8 @@ class DashboardView extends GetView<DashboardController> {
         cards.add(const SizedBox(width: 16));
       }
       
-      // Manager, Karyawan, User/Klien - Tiket management
-      if (controller.isManager || controller.isKaryawan || controller.isUser) {
+      // Manager, Karyawan, User/Klien - Tiket management (excluding Admin as it's handled above)
+      if ((controller.isManager || controller.isKaryawan || controller.isUser) && !controller.isAdmin) {
         cards.add(
           Expanded(
             child: _buildQuickActionCard(

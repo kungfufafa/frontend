@@ -80,7 +80,7 @@ class TiketsView extends GetView<TiketsController> {
                               tooltip: 'Refresh',
                             ),
                             const SizedBox(width: 8),
-                            // Create button for Manager, Karyawan, and User
+                            // Create button for Admin, Manager, Karyawan, and User
                             Obx(() => 
                               controller.showCreateButton || controller.isUser
                                 ? FilledButton.icon(
@@ -575,7 +575,7 @@ class TiketsView extends GetView<TiketsController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Show unassigned alert badge for manager/admin
+              // Show unassigned alert badge for admin/manager
               if (isUnassigned && isNew && (controller.isAdmin || controller.isManager)) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -719,7 +719,7 @@ class TiketsView extends GetView<TiketsController> {
                     ),
                   ),
                   const Spacer(),
-                  // Unit management actions for Manager
+                  // Unit management actions for Admin and Manager
                   if (controller.isManager || controller.isAdmin) ...[
                     if (controller.canEditUnit(tiket))
                       IconButton(
@@ -911,7 +911,8 @@ class TiketsView extends GetView<TiketsController> {
     String additionalWarning = '';
     
   if (controller.isManager || controller.isAdmin) {
-      warningMessage = 'Sebagai Manager, Anda dapat menghapus tiket apapun. Apakah Anda yakin ingin menghapus tiket ini?';
+      String roleText = controller.isAdmin ? 'Admin' : 'Manager';
+      warningMessage = 'Sebagai $roleText, Anda dapat menghapus tiket apapun. Apakah Anda yakin ingin menghapus tiket ini?';
   if (controller.isCompletedTicket(tiket)) {
         additionalWarning = 'Tiket ini sudah selesai dan dapat dihapus.';
       }
